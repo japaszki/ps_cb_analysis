@@ -98,7 +98,7 @@ for channel_index, channel_harmonic in enumerate(file['channel_harmonics']):
     s1 = s_dipole_runs_avg[0][channel_index][f_indices, :]
     s2 = s1[:, t_indices]
     plt.figure(figsize=(10,10)) 
-    plt.pcolormesh(1e3 * t[t_indices], f[f_indices], 10*np.log10(s2), cmap='hot', shading='flat')
+    plt.pcolormesh(t[t_indices], f[f_indices], 10*np.log10(s2), cmap='hot', shading='flat')
     plt.title('Dipole h' + str(channel_harmonic) + ' , averaged over shots')
     plt.ylabel('Frequency [Hz]')
     plt.xlabel('Time after acq start [ms]')
@@ -109,7 +109,7 @@ for channel_index, channel_harmonic in enumerate(file['channel_harmonics']):
     s1 = s_quad_runs_avg[0][channel_index][f_indices, :]
     s2 = s1[:, t_indices]
     plt.figure(figsize=(10,10)) 
-    plt.pcolormesh(1e3 * t[t_indices], f[f_indices], 10*np.log10(s2), cmap='hot', shading='flat')
+    plt.pcolormesh(t[t_indices], f[f_indices], 10*np.log10(s2), cmap='hot', shading='flat')
     plt.title('Quad h' + str(channel_harmonic) + ' , averaged over shots')
     plt.ylabel('Frequency [Hz]')
     plt.xlabel('Time after acq start [ms]')
@@ -170,7 +170,7 @@ fs_fit_list = []
 for data_type in fs_fit_params['data_types']:
     for shot_index in fs_fit_params['shot_indices']:
         for channel_index in fs_fit_params['channel_indices']:
-            fs_fit_list.append(cmplx_runs[data_type][fs_fit_params['gain_index']][shot_index][channel_index])
+            fs_fit_list.append(cmplx_runs[data_type][fs_fit_params['scan_index']][shot_index][channel_index])
         
 fs_fit_data = np.array(fs_fit_list)
 fs_fit = clib.fs_sidebands(fs_params, fs_init, fs_bounds, file['acq_start_time'], file['f_samp'], fs_fit_data, True)
@@ -282,10 +282,21 @@ for data_type in data_types_plot:
             for scan_index, scan_param in enumerate(scan_settings):
                 #Sum together the upper and lower sideband magnitudes of the specifiec fs harmonic:
                 data_ul = amps_samp_runs[scan_index][2*h-1,:,:] + amps_samp_runs[scan_index][2*h,:,:]
-                        
+                
+                #Save all individual data points for plotting later:
+                h_amps_all[data_type][h_index].append(data_ul)
+                
                 #Take the mean of each run over the specified time window:
                 tomo_mean = np.mean(data_ul[tomo_ref_time_indices,:], axis=0)
                 tomo_h_runs[data_type][scan_index][channel_index,:,h_index] = tomo_mean
+                
+                #Take the mean of each run over the feedback on time window:
+                fb_on_mean = np.mean(data_ul[fb_on_time_indices,:], axis=0)
+                        
+                #Take quartiles of window mean over runs:
+                for pc_index, pc in enumerate(percentiles):
+                    fb_on_h_vs_gain[pc_index][data_type][channel_index,scan_index,h_index] =\
+                        np.percentile(fb_on_mean, pc)
             
         [x_axes, y_indices, labels] = scan.gen_1d_scans(scan_settings, scan_param_names)
         
@@ -299,26 +310,13 @@ for data_type in data_types_plot:
             for plot_index, x_axis in enumerate(x_axes[x_param_index]):
                 
                 plt.figure(figsize=(10,10)) 
-                for h_index, h in enumerate(analysis['fs_harms']):
-                    for scan_index in y_indices[x_param_index][plot_index]:
-                        #Sum together the upper and lower sideband magnitudes of the specifiec fs harmonic:
-                        data_ul = amps_samp_runs[scan_index][2*h-1,:,:] + amps_samp_runs[scan_index][2*h,:,:] 
+                for h_index, h in enumerate(analysis['fs_harms']):                           
+                    y_plot = fb_on_h_vs_gain[1][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
+                    y_fill_l = fb_on_h_vs_gain[0][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
+                    y_fill_u = fb_on_h_vs_gain[2][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
                         
-                        #Save all individual data points for plotting later:
-                        h_amps_all[data_type][h_index].append(data_ul) 
-                        
-                        #Take the mean of each run over the feedback on time window:
-                        fb_on_mean = np.mean(data_ul[fb_on_time_indices,:], axis=0)
-                        
-                        #Take quartiles of window mean over runs:
-                        for pc_index, pc in enumerate(percentiles):
-                            fb_on_h_vs_gain[pc_index][data_type][channel_index,scan_index,h_index] =\
-                                np.percentile(fb_on_mean, pc)
-                        
-                    plt.plot(x_axis, fb_on_h_vs_gain[1][data_type][channel_index,:,h_index],\
-                             '.-', label = str(h) + '*f_s')
-                    plt.fill_between(x_axis, fb_on_h_vs_gain[0][data_type][channel_index,:,h_index],\
-                                     fb_on_h_vs_gain[2][data_type][channel_index,:,h_index], alpha=0.2, antialiased=True)
+                    plt.plot(x_axis, y_plot, '.-', label = str(h) + '*f_s')
+                    plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
                     
                 plt.xlabel(x_param_name)
                 plt.ylabel('Mean amplitude between ' + str(file['fb_start_time']) + ' ms and ' +\
