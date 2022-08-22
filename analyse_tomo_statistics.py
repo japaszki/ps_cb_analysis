@@ -191,6 +191,7 @@ for x_param_index, x_param_name in enumerate(scan_param_names):
             plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
         plt.xlabel(x_param_name)
         plt.ylabel('Total amplitude across modes ' + str(stab_harms) + ', filter method')
+        plt.title(labels[x_param_index][plot_index])
         plt.legend(loc=0, fontsize='medium')
         plt.savefig(output_dir + '/fs_harm_stab_osc_vs_param_' + str(x_param_index) +\
                             '_plot_' + str(plot_index) + '.png')
@@ -217,6 +218,7 @@ for x_param_index, x_param_name in enumerate(scan_param_names):
         plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
         plt.xlabel(x_param_name)
         plt.ylabel('Total amplitude across all modes, edge method')
+        plt.title(labels[x_param_index][plot_index])
         plt.legend(loc=0, fontsize='medium')
         plt.savefig(output_dir + '/edge_total_osc_vs_param_' + str(x_param_index) +\
                             '_plot_' + str(plot_index) + '.png')
@@ -242,6 +244,7 @@ for x_param_index, x_param_name in enumerate(scan_param_names):
         plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
         plt.xlabel(x_param_name)
         plt.ylabel('Total amplitude across modes ' + str(stab_harms) + ', edge method')
+        plt.title(labels[x_param_index][plot_index])
         plt.legend(loc=0, fontsize='medium')
         plt.savefig(output_dir + '/edge_stab_osc_vs_param_' + str(x_param_index) +\
                             '_plot_' + str(plot_index) + '.png')
