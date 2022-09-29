@@ -490,7 +490,7 @@ def read_and_analyse_tomo(file, analysis, plots, plot_raw_waterfall):
     
     #Plot mode windows vs time:
     if plots:
-        modes_vs_time(bunch_pos, bunch_width, 0, N_frames, delta_turns, \
+        modes_vs_time(bunch_pos, bunch_width, tomo_params, \
                   analysis['mode_vs_time_window'], analysis['mode_vs_time_resolution'],\
                       analysis['N_buckets_fft'], analysis['mode_vs_time_N_modes_plt'])
     
