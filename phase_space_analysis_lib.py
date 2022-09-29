@@ -51,6 +51,10 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
         input_parameters = read_input_parameters(fallback_filename)
         dummy_machine, frames = tomoin.txt_input_to_machine(input_parameters)
         
+    dummy_machine.nbins = frames.nbins_frame
+    frames.skip_bins_start = 0
+    frames.skip_bins_end = 0
+        
     measured_waterfall = frames.to_waterfall(raw_data)
 
     #Grid coordinates are needed even if not plotting:
@@ -91,9 +95,10 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
     mean_profile = np.mean(waterfall_window, axis=0)
     profile_max = np.max(mean_profile)
     profile_min = np.min(mean_profile)
-    profile_mid = 0.5 * (profile_max + profile_min)
+    profile_level = 0.25
+    profile_threshold = profile_level * profile_max + (1-profile_level) * profile_min
     
-    profile_above_mid = np.array(mean_profile >= profile_mid, dtype='int')
+    profile_above_mid = np.array(mean_profile >= profile_threshold, dtype='int')
     edges = np.diff(profile_above_mid)
     rising_edges = np.hstack(np.argwhere(edges == 1))
     falling_edges = np.hstack(np.argwhere(edges == -1))
@@ -160,10 +165,16 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
         machine, frames = tomoin.txt_input_to_machine(input_parameters)
         
         machine.nprofiles = analysis['mode_window_end'] - analysis['mode_window_start']
-        machine.nbins = waterfall_bucket[bucket].shape[0]
+        machine._nbins = waterfall_bucket[bucket].shape[1]
+        machine.nbins = waterfall_bucket[bucket].shape[1]
+        machine.full_pp_flag = True
         machine.values_at_turns()
     
-        frames.rebin = 1
+        if 'tomogprahy_rebin_override' in analysis.keys():
+            frames.rebin = analysis['tomogprahy_rebin_override']
+        frames.nbins_frame = waterfall_bucket[bucket].shape[1]
+        frames.skip_bins_start = 0
+        frames.skip_bins_end = 0
         
         # Creating profiles object
         profiles = tomoin.raw_data_to_profiles(
@@ -344,7 +355,7 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
             plt.bar(np.arange(analysis['N_buckets_fft']), np.abs(mode_spectrum[:,mode_index]))
             plt.xlabel('Mode')
             plt.ylabel('Mode amplitude [s]')
-            plt.title(display_name + ', ' + str(mode_names[mode_index]) + ' mode spectrum')
+            plt.title(display_name + ', ' + str(mode_names[mode]) + ' mode spectrum')
             plt.show()
             
     return mode_spectrum
