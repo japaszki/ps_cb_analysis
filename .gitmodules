@@ -1,0 +1,3 @@
+[submodule "longitudinal_tomography"]
+	path = longitudinal_tomography
+	url = ssh://git@gitlab.cern.ch:7999/longitudinaltomography/tomographyv3.git
