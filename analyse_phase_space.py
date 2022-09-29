@@ -79,7 +79,7 @@ for fs_harm_index, fs_harm in enumerate(analysis['fs_harms']):
               ' component, \n averaged over shots')
     plt.legend(loc=0, fontsize='medium')
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig(output_dir + '/mean_mode_spectrum_phase_space_vs_gain_' + str(fs_harm) + 'fs.png')
+    plt.savefig(output_dir + '/mean_mode_spectrum_phase_space_vs_param_' + str(fs_harm) + 'fs.png')
     plt.rc('font', size=16)
     plt.show()
     plt.close()
@@ -112,7 +112,8 @@ for x_param_index, x_param_name in enumerate(scan_param_names):
         plt.legend(loc=0, fontsize='medium')
         plt.title(labels[x_param_index][plot_index])
         plt.rc('font', size=16)
-        plt.savefig(output_dir + '/phase_space_total_osc_vs_gain.png')
+        plt.savefig(output_dir + '/phase_space_total_osc_vs_param_' + str(x_param_index) +\
+                            '_plot_' + str(plot_index) + '.png')
         plt.show()
         plt.close()
         
@@ -130,7 +131,8 @@ for x_param_index, x_param_name in enumerate(scan_param_names):
         plt.title(labels[x_param_index][plot_index])
         plt.legend(loc=0, fontsize='medium')
         plt.rc('font', size=16)
-        plt.savefig(output_dir + '/phase_space_stab_osc_vs_gain.png')
+        plt.savefig(output_dir + '/phase_space_stab_osc_vs_param_' + str(x_param_index) +\
+                            '_plot_' + str(plot_index) + '.png')
         plt.show()
         plt.close()
 
