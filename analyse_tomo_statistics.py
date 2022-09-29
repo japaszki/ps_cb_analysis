@@ -54,7 +54,7 @@ for scan_index, scan_param in enumerate(scan_settings):
         file['display_name'] = 'shot_' + str(file_suffix)
         [pos_modes_edge_window_runs[scan_index][:, file_index],\
          width_modes_edge_window_runs[scan_index][:, file_index], modes_filt_curr] = \
-            tlib.read_and_analyse_tomo(file, analysis, False, True)   
+            tlib.read_and_analyse_tomo(file, analysis, True, True)   
         modes_filt_window_runs[scan_index][:,file_index,:] = np.transpose(modes_filt_curr)
 
 pos_spectrum_percentiles = [[np.percentile(np.absolute(pos_modes_edge_window_runs[scan_index]), pc, axis=1)\
