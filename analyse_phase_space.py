@@ -107,11 +107,12 @@ for x_param_index, x_param_name in enumerate(scan_param_names):
             
             plt.plot(x_axis, y_plot, '.-', label='fs * ' + str(fs_harm))
             plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
-        plt.xlabel('Feedback gain')
+        plt.xlabel(x_param_name)
         plt.ylabel('Total amplitude across all modes, phase space method')
         plt.legend(loc=0, fontsize='medium')
-        plt.savefig(output_dir + '/phase_space_total_osc_vs_gain.png')
+        plt.title(labels[x_param_index][plot_index])
         plt.rc('font', size=16)
+        plt.savefig(output_dir + '/phase_space_total_osc_vs_gain.png')
         plt.show()
         plt.close()
         
@@ -124,11 +125,12 @@ for x_param_index, x_param_name in enumerate(scan_param_names):
             
             plt.plot(x_axis, y_plot, '.-', label='fs * ' + str(fs_harm))
             plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
-        plt.xlabel('Feedback gain')
+        plt.xlabel(x_param_name)
         plt.ylabel('Total amplitude across modes ' + str(stab_harms) + ', phase space method')
+        plt.title(labels[x_param_index][plot_index])
         plt.legend(loc=0, fontsize='medium')
-        plt.savefig(output_dir + '/phase_space_stab_osc_vs_gain.png')
         plt.rc('font', size=16)
+        plt.savefig(output_dir + '/phase_space_stab_osc_vs_gain.png')
         plt.show()
         plt.close()
 
