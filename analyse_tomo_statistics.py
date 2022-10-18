@@ -136,6 +136,7 @@ pf.set_fontsize(20)
 pf.gen_plot()
 pf.save_yaml()
 
+
 pf = pfig.portable_fig()
 pf.set_figsize((12,9))
 for scan_index, scan_param in enumerate(scan_settings):
