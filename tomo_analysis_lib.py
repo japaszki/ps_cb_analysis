@@ -5,7 +5,7 @@ Created on Thu Jul 21 10:00:26 2022
 @author: JohnG
 """
 import numpy as np
-import matplotlib.pyplot as plt
+import portable_fig as pfig
 from scipy.signal import savgol_filter
 
 def tomo_bucket(tomo_data, tomo_params, bucket_params, dipole_freq, fs_harm, plots, plot_name):
@@ -26,17 +26,18 @@ def tomo_bucket(tomo_data, tomo_params, bucket_params, dipole_freq, fs_harm, plo
     
     if plots:
         plot_y, plot_x = np.meshgrid(turns[tomo_params['start_frame']:tomo_params['end_frame']], samples_plot)
-        plt.figure(figsize=(10,10))
-        plt.pcolormesh(plot_x, plot_y, bucket_tomo_trans, cmap='hot', shading='auto')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.xlabel('Time [s]')
-        plt.ylabel('Turn')
-        plt.title(plot_name + ', bucket ' + str(bucket_params['bucket']))
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.savefig('tomogram_zoom.png')
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.pcolormesh(plot_x, plot_y, bucket_tomo_trans, cmap='hot', shading='auto')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.xlabel('Time [s]')
+        pf.ylabel('Turn')
+        pf.title(plot_name + ', bucket ' + str(bucket_params['bucket']))
+        pf.colorbar()
+        pf.set_filename('tomogram_zoom')
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
     
     #Perform FFT on each tomogram sample:
     N_samples = bucket_tomo_trans.shape[0]
@@ -58,18 +59,19 @@ def tomo_bucket(tomo_data, tomo_params, bucket_params, dipole_freq, fs_harm, plo
     freqscale_rfft = np.arange(N_rfft) * df
     
     if plots:
-        plt.figure('sample_by_sample_fftzoom', figsize=(10,10))  
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         plot_y, plot_x = np.meshgrid(freqscale, samples_plot)
-        plt.pcolormesh(plot_x, plot_y, np.log10(np.abs(fft_data_win)), cmap='hot', shading='auto')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.xlabel('Time [s]')
-        plt.ylabel('Frequency [1/turn]')
-        plt.title('Sample-by-sample FFT, bucket ' + str(bucket_params['bucket']) + ', dB')
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.savefig(plot_name + '_sample_by_sample_fft_zoom.png')
-        plt.show()
-        plt.close()
+        pf.pcolormesh(plot_x, plot_y, np.log10(np.abs(fft_data_win)), cmap='hot', shading='auto')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.xlabel('Time [s]')
+        pf.ylabel('Frequency [1/turn]')
+        pf.title('Sample-by-sample FFT, bucket ' + str(bucket_params['bucket']) + ', dB')
+        pf.colorbar()
+        pf.set_filename(plot_name + '_sample_by_sample_fft_zoom')
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
 
     #Gaussian filter specification:
     filt_width = dipole_freq/4
@@ -86,17 +88,18 @@ def tomo_bucket(tomo_data, tomo_params, bucket_params, dipole_freq, fs_harm, plo
     
     if plots:
         plot_y, plot_x = np.meshgrid(turns[tomo_params['start_frame']:tomo_params['end_frame']], samples_plot)
-        plt.figure(figsize=(10,10)) 
-        plt.pcolormesh(plot_x, plot_y, ifft_data, cmap='hot', shading='auto')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.xlabel('Time [s]')
-        plt.ylabel('Turn')
-        plt.title(plot_name + ', bucket ' + str(bucket_params['bucket']) + ', fs * ' + str(fs_harm) + ' component')
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.savefig(plot_name + '_tomogram_bucket ' + str(bucket_params['bucket']) + '_fs_times_' + str(fs_harm) + '.png')
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9)) 
+        pf.pcolormesh(plot_x, plot_y, ifft_data, cmap='hot', shading='auto')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.xlabel('Time [s]')
+        pf.ylabel('Turn')
+        pf.title(plot_name + ', bucket ' + str(bucket_params['bucket']) + ', fs * ' + str(fs_harm) + ' component')
+        pf.colorbar()
+        pf.set_filename(plot_name + '_tomogram_bucket ' + str(bucket_params['bucket']) + '_fs_times_' + str(fs_harm))
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
     
     peak_freq = np.zeros(N_samples)
     peak_cmplx = np.zeros(N_samples, dtype='complex')
@@ -108,29 +111,32 @@ def tomo_bucket(tomo_data, tomo_params, bucket_params, dipole_freq, fs_harm, plo
         peak_cmplx[i] = rfft_sample_scaled[peak_index] / N_rfft
     
     if plots:
-        plt.figure(figsize=(10,10)) 
-        plt.plot(samples_plot, peak_freq)
-        plt.xlabel('Time [s]')
-        plt.ylabel('Fitted frequency [1/turn]')
-        plt.title(plot_name + ', bucket ' + str(bucket_params['bucket']) + ', fs * ' + str(fs_harm) + ' component')
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.plot(samples_plot, peak_freq)
+        pf.xlabel('Time [s]')
+        pf.ylabel('Fitted frequency [1/turn]')
+        pf.title(plot_name + ', bucket ' + str(bucket_params['bucket']) + ', fs * ' + str(fs_harm) + ' component')
+        pf.set_fontsize(20)
+        pf.gen_plot()
         
-        plt.figure(figsize=(10,10)) 
-        plt.plot(samples_plot, np.angle(peak_cmplx))
-        plt.xlabel('Time [s]')
-        plt.ylabel('Oscillation phase [rad]')
-        plt.title(plot_name + ', bucket ' + str(bucket_params['bucket']) + ', fs * ' + str(fs_harm) + ' component')
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9)) 
+        pf.plot(samples_plot, np.angle(peak_cmplx))
+        pf.xlabel('Time [s]')
+        pf.ylabel('Oscillation phase [rad]')
+        pf.title(plot_name + ', bucket ' + str(bucket_params['bucket']) + ', fs * ' + str(fs_harm) + ' component')
+        pf.set_fontsize(20)
+        pf.gen_plot()
         
-        plt.figure(figsize=(10,10)) 
-        plt.plot(samples_plot, np.abs(peak_cmplx))
-        plt.xlabel('Time [s]')
-        plt.ylabel('Amplitude')
-        plt.title(plot_name + ', bucket ' + str(bucket_params['bucket']) + ', fs * ' + str(fs_harm) + ' component')
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.plot(samples_plot, np.abs(peak_cmplx))
+        pf.xlabel('Time [s]')
+        pf.ylabel('Amplitude')
+        pf.title(plot_name + ', bucket ' + str(bucket_params['bucket']) + ', fs * ' + str(fs_harm) + ' component')
+        pf.set_fontsize(20)
+        pf.gen_plot()
     
     return [peak_freq, peak_cmplx, bunch_peak_index]
 
@@ -175,36 +181,37 @@ def fs_harm_mode_analysis(tomo_data, tomo_params, bucket_params, N_buckets, N_bu
         # percentiles = [25, 50, 75]
         # fs_harm_abs_percentiles = [np.percentile(fs_harm_abs, pc, axis=1) for pc in percentiles]
         
-        plt.figure(figsize=(10,10)) 
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         for bucket in range(N_buckets):
             N_samples = fs_harm_cmplx_vs_sample[bucket].shape[0]
-            plt.plot(np.arange(N_samples) - bunch_peak_sample[bucket], np.abs(fs_harm_cmplx_vs_sample[bucket]))
-        plt.xlabel('Sample')
-        plt.ylabel('Filtered amplitude [V]')
-        plt.title(plot_name + ', all buckets, fs * ' + str(fs_harm) + ' component')
-        plt.rc('font', size=16)
-        plt.savefig(plot_name + '_amplitude_fs_times_' + str(fs_harm) + '.png')
-        plt.show()
-        plt.close()
+            pf.plot(np.arange(N_samples) - bunch_peak_sample[bucket], np.abs(fs_harm_cmplx_vs_sample[bucket]))
+        pf.xlabel('Sample')
+        pf.ylabel('Filtered amplitude [V]')
+        pf.title(plot_name + ', all buckets, fs * ' + str(fs_harm) + ' component')
+        pf.set_filename(plot_name + '_amplitude_fs_times_' + str(fs_harm))
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
         
         #Plot total mode oscillation amplitude vs sample offset:
-        plt.figure(figsize=(10,10)) 
-        plt.plot(offset_range, total_amp_vs_offset)
-        plt.xlabel('Offset from bunch centre [samples]')
-        plt.ylabel('Total amplitude [V]')
-        plt.rc('font', size=16)
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.plot(offset_range, total_amp_vs_offset)
+        pf.xlabel('Offset from bunch centre [samples]')
+        pf.ylabel('Total amplitude [V]')
+        pf.set_fontsize(20)
+        pf.gen_plot()
         
         #Plot mode spectrum at optimum offset:
-        plt.figure(figsize=(10,10)) 
-        plt.bar(np.arange(N_buckets_fft), np.abs(mode_spectrum_vs_offset[optimum_offset]))
-        plt.xlabel('Mode')
-        plt.ylabel('Mode amplitude [V]')
-        plt.title('Mode spectrum at optimum offset = ' + str(optimum_offset))
-        plt.rc('font', size=16)
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.bar(np.arange(N_buckets_fft), np.abs(mode_spectrum_vs_offset[optimum_offset]))
+        pf.xlabel('Mode')
+        pf.ylabel('Mode amplitude [V]')
+        pf.title('Mode spectrum at optimum offset = ' + str(optimum_offset))
+        pf.set_fontsize(20)
+        pf.gen_plot()
         
     return mode_spectrum_vs_offset[optimum_offset]
 
@@ -253,79 +260,86 @@ def mode_analysis(bunch_pos, bunch_width, tomo_params, N_buckets, plots):
     width_mode_spectrum = fft_width[:, max_width_freq_index]
     
     if plots:
-        plt.figure('bunch_pos_img')
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         plot_y, plot_x = np.meshgrid(tomo_params['delta_turns']*np.arange(tomo_params['start_frame'],\
                                                                           tomo_params['end_frame']), np.arange(N_bunches+1))
-        plt.pcolormesh(plot_x, plot_y, bunch_rel_pos, cmap='hot', shading='auto')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.title('Bunch position offset')
-        plt.xlabel('Bunch')
-        plt.ylabel('Turn')
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.savefig('bunch_pos_img.png')
-        plt.show()
-        plt.close()
+        pf.pcolormesh(plot_x, plot_y, bunch_rel_pos, cmap='hot', shading='auto')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.title('Bunch position offset')
+        pf.xlabel('Bunch')
+        pf.ylabel('Turn')
+        pf.colorbar()
+        pf.set_filename('bunch_pos_img')
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
         
-        plt.figure('bunch_width_img')
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         # plot_y, plot_x = np.meshgrid(delta_turns*np.arange(start_frame, end_frame), np.arange(N_bunches+1))
-        plt.pcolormesh(plot_x, plot_y, bunch_rel_width, cmap='hot', shading='auto')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.title('Bunch width offset')
-        plt.xlabel('Bunch')
-        plt.ylabel('Turn')
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.savefig('bunch_width_img.png')
-        plt.show()
-        plt.close()
+        pf.pcolormesh(plot_x, plot_y, bunch_rel_width, cmap='hot', shading='auto')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.title('Bunch width offset')
+        pf.xlabel('Bunch')
+        pf.ylabel('Turn')
+        pf.colorbar()
+        pf.set_filename('bunch_width_img')
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
         
-        plt.figure('bunch_pos_2dfft')  
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         plot_y, plot_x = np.meshgrid(fft_freq, np.arange(N_buckets+1))
-        plt.pcolormesh(plot_x, plot_y, np.abs(fft_pos), cmap='hot', shading='auto')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.xlabel('Mode')
-        plt.ylabel('Frequency [1/turn]')
-        plt.title('Bunch position oscillation')
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.savefig('bunch_pos_2dfft.png')
-        plt.show()
-        plt.close()
+        pf.pcolormesh(plot_x, plot_y, np.abs(fft_pos), cmap='hot', shading='auto')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.xlabel('Mode')
+        pf.ylabel('Frequency [1/turn]')
+        pf.title('Bunch position oscillation')
+        pf.colorbar()
+        pf.set_filename('bunch_pos_2dfft')
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
         
-        plt.figure('bunch_width_2dfft')  
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         plot_y, plot_x = np.meshgrid(fft_freq, np.arange(N_buckets+1))
-        plt.pcolormesh(plot_x, plot_y, np.abs(fft_width), cmap='hot', shading='auto')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.xlabel('Mode')
-        plt.ylabel('Frequency [1/turn]')
-        plt.title('Bunch width oscillation')
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.savefig('bunch_width_2dfft.png')
-        plt.show()
-        plt.close()
-                      
-        plt.figure('bunch_pos_fft')
-        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
-        ax.bar([x for x in range(N_buckets)], np.absolute(pos_mode_spectrum))
-        ax.set_xlabel("Mode")
-        ax.set_ylabel("Amplitude [s]")
-        plt.title('Bunch position oscillation')
-        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        plt.savefig('bunch_pos_modes.png')
-        plt.show()
-        plt.close()
+        pf.pcolormesh(plot_x, plot_y, np.abs(fft_width), cmap='hot', shading='auto')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.xlabel('Mode')
+        pf.ylabel('Frequency [1/turn]')
+        pf.title('Bunch width oscillation')
+        pf.colorbar()
+        pf.set_filename('bunch_width_2dfft')
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
         
-        plt.figure('bunch_width_fft')
-        plt.bar([x for x in range(N_buckets)], np.absolute(width_mode_spectrum))
-        plt.xlabel("Mode")
-        plt.ylabel("Amplitude [s]")
-        plt.title('Bunch width oscillation')
-        plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        plt.savefig('bunch_width_modes.png')
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.bar([x for x in range(N_buckets)], np.absolute(pos_mode_spectrum))
+        pf.xlabel("Mode")
+        pf.ylabel("Amplitude [s]")
+        pf.title('Bunch position oscillation')
+        # ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        pf.set_filename('bunch_pos_modes')
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
+        
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.bar([x for x in range(N_buckets)], np.absolute(width_mode_spectrum))
+        pf.xlabel("Mode")
+        pf.ylabel("Amplitude [s]")
+        pf.title('Bunch width oscillation')
+        # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        pf.set_filename('bunch_width_modes')
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
         
     return [pos_mode_spectrum, width_mode_spectrum, fft_freq[max_pos_freq_index], fft_freq[max_width_freq_index]]
      
@@ -333,63 +347,64 @@ def modes_vs_time(bunch_pos, bunch_width, tomo_params, window, resolution, N_buc
     #Define time windows
     window_centres = np.round(np.arange(tomo_params['start_frame']+window/2, tomo_params['end_frame']-window/2, resolution))
     N_windows = window_centres.shape[0]
-
-    #Calculate modes for each window
-    N_bunches = bunch_pos.shape[0]
-    pos_modes = np.empty([N_buckets, N_windows])
-    width_modes = np.empty([N_buckets, N_windows])
     
-    for i in range(N_windows):
-        tomo_params_window = {'start_frame' : int(window_centres[i]-window/2),\
-                              'end_frame' : int(window_centres[i]+window/2), \
-                               'delta_turns' : tomo_params['delta_turns']}
+    if N_windows > 0:
+        #Calculate modes for each window
+        N_bunches = bunch_pos.shape[0]
+        pos_modes = np.empty([N_buckets, N_windows])
+        width_modes = np.empty([N_buckets, N_windows])
         
-        [pos_modes_curr, width_modes_curr, _, _] = \
-            mode_analysis(bunch_pos, bunch_width, tomo_params_window, N_buckets, False)
+        for i in range(N_windows):
+            tomo_params_window = {'start_frame' : int(window_centres[i]-window/2),\
+                                  'end_frame' : int(window_centres[i]+window/2), \
+                                   'delta_turns' : tomo_params['delta_turns']}
             
-        pos_modes[:,i] = np.absolute(pos_modes_curr)
-        width_modes[:,i] = np.absolute(width_modes_curr)
-    
-            
-    #Find dominant oscillation modes:
-    pos_dom_modes = np.argsort(np.amax(pos_modes, axis=1))
-    width_dom_modes = np.argsort(np.amax(width_modes, axis=1))
-    
-    #Plot mode amplitudes vs time:
-    if N_modes_plt > 0:
-        plt.figure('pos_modes_vs_turn')
-        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
-        for i in range(1,N_modes_plt+1):
-            ax.plot(window_centres*tomo_params['delta_turns'], pos_modes[pos_dom_modes[-i], :],\
-                    label = 'Mode ' + str(pos_dom_modes[-i]))
-        ax.plot(window_centres*tomo_params['delta_turns'], \
-                np.sum(pos_modes[pos_dom_modes[0:(N_bunches-N_modes_plt)], :], axis=0), \
-                label = 'Remaining modes')
-        ax.set_xlabel("Turn")
-        ax.set_ylabel("Mode magnitude [s]")
-        plt.title('Bunch position modes')
-        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        plt.legend(loc=0, fontsize='medium')
-        plt.savefig('pos_modes_vs_turn.png')
-        plt.show()
-        plt.close()
+            [pos_modes_curr, width_modes_curr, _, _] = \
+                mode_analysis(bunch_pos, bunch_width, tomo_params_window, N_buckets, False)
+                
+            pos_modes[:,i] = np.absolute(pos_modes_curr)
+            width_modes[:,i] = np.absolute(width_modes_curr)
         
-        plt.figure('width_modes_vs_turn')
-        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
-        for i in range(1,N_modes_plt+1):
-            ax.plot(window_centres*tomo_params['delta_turns'], width_modes[width_dom_modes[-i], :], \
-                    label = 'Mode ' + str(width_dom_modes[-i]))
-        ax.plot(window_centres*tomo_params['delta_turns'], \
-                np.sum(width_modes[width_dom_modes[0:(N_bunches-N_modes_plt)], :], axis=0), \
-                label = 'Remaining modes')
-        ax.set_xlabel("Turn")
-        ax.set_ylabel("Mode magnitude [s]")
-        plt.title('Bunch width modes')
-        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        plt.legend(loc=0, fontsize='medium')
-        plt.savefig('width_modes_vs_turn.png')
-        plt.show()
-        plt.close()
+                
+        #Find dominant oscillation modes:
+        pos_dom_modes = np.argsort(np.amax(pos_modes, axis=1))
+        width_dom_modes = np.argsort(np.amax(width_modes, axis=1))
+        
+        #Plot mode amplitudes vs time:
+        if N_modes_plt > 0:
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
+            for i in range(1,N_modes_plt+1):
+                pf.plot(window_centres*tomo_params['delta_turns'], pos_modes[pos_dom_modes[-i], :],\
+                        label = 'Mode ' + str(pos_dom_modes[-i]))
+            pf.plot(window_centres*tomo_params['delta_turns'], \
+                    np.sum(pos_modes[pos_dom_modes[0:(N_bunches-N_modes_plt)], :], axis=0), \
+                    label = 'Remaining modes')
+            pf.xlabel("Turn")
+            pf.ylabel("Mode magnitude [s]")
+            pf.title('Bunch position modes')
+            # ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            pf.legend(loc=0, fontsize='medium')
+            pf.set_filename('pos_modes_vs_turn')
+            pf.set_fontsize(20)
+            pf.gen_plot()
+            
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
+            for i in range(1,N_modes_plt+1):
+                pf.plot(window_centres*tomo_params['delta_turns'], width_modes[width_dom_modes[-i], :], \
+                        label = 'Mode ' + str(width_dom_modes[-i]))
+            pf.plot(window_centres*tomo_params['delta_turns'], \
+                    np.sum(width_modes[width_dom_modes[0:(N_bunches-N_modes_plt)], :], axis=0), \
+                    label = 'Remaining modes')
+            pf.xlabel("Turn")
+            pf.ylabel("Mode magnitude [s]")
+            pf.title('Bunch width modes')
+            # ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            pf.legend(loc=0, fontsize='medium')
+            pf.set_filename('width_modes_vs_turn')
+            pf.set_fontsize(20)
+            pf.gen_plot()
         
 def read_and_analyse_tomo(file, analysis, plots, plot_raw_waterfall):
     with open(file['filename'], 'r') as f:
@@ -411,16 +426,17 @@ def read_and_analyse_tomo(file, analysis, plots, plot_raw_waterfall):
     #Plot raw data from tomoscope:
     if plot_raw_waterfall:
         plot_y, plot_x = np.mgrid[0:N_frames*delta_turns:delta_turns, 0:((N_bins-0.5)*dt_samp):dt_samp]
-        plt.pcolormesh(plot_x, plot_y, data_2d, cmap='hot', shading='flat')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.xlabel('Time [s]')
-        plt.ylabel('Turn')
-        plt.title(file['display_name'])
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.savefig(file['output_dir'] + 'waterfall_' + file['display_name'] +'.png')
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.pcolormesh(plot_x, plot_y, data_2d, cmap='hot', shading='flat')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.xlabel('Time [s]')
+        pf.ylabel('Turn')
+        pf.title(file['display_name'])
+        pf.colorbar()
+        pf.set_filename(file['output_dir'] + 'waterfall_' + file['display_name'])
+        pf.set_fontsize(20)
+        pf.gen_plot()
     
     T_bucket = (analysis['T_end'] - analysis['T_start']) / analysis['N_buckets']
     T_vec = np.arange(N_bins) * dt_samp
@@ -431,18 +447,24 @@ def read_and_analyse_tomo(file, analysis, plots, plot_raw_waterfall):
     #Plots to help with alignment of limits:
     if plots:
         time_indices = (T_vec >= analysis['T_start']) & (T_vec < analysis['T_end'])
-        plt.plot(T_vec[time_indices], data_2d[0, time_indices])
-        plt.title('Turn 1, within time limits')
-        plt.xlabel('Time [s]')
-        plt.show()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.plot(T_vec[time_indices], data_2d[0, time_indices])
+        pf.title('Turn 1, within time limits')
+        pf.xlabel('Time [s]')
+        pf.set_fontsize(20)
+        pf.gen_plot()
     
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         for bucket in range(analysis['N_buckets']):
             time_indices = (T_vec >= analysis['T_start'] + bucket*T_bucket) & (T_vec < analysis['T_start'] + (bucket+1)*T_bucket)
             bucket_profile = data_2d[analysis['alignment_frame'], time_indices]
-            plt.plot(bucket_profile)
-        plt.title('Turn ' + str(analysis['alignment_frame'] * delta_turns) + ', individual buckets')
-        plt.xlabel('Time [samples]')
-        plt.show()
+            pf.plot(np.arange(bucket_profile.shape[0]), bucket_profile)
+        pf.title('Turn ' + str(analysis['alignment_frame'] * delta_turns) + ', individual buckets')
+        pf.xlabel('Time [samples]')
+        pf.set_fontsize(20)
+        pf.gen_plot()
     
     #Identify edges of bunch in each bucket to determine width and position:
     for frame in range(N_frames):
@@ -468,17 +490,23 @@ def read_and_analyse_tomo(file, analysis, plots, plot_raw_waterfall):
             bunch_width[bucket, frame] = dt_samp*(falling_edge_interp_index - rising_edge_interp_index)
     
     if plots:
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         for bucket in range(analysis['N_buckets']):
-            plt.plot(bunch_pos[bucket,:])
-        plt.xlabel('Turn')
-        plt.ylabel('Bunch position [s]')
-        plt.show()
+            pf.plot(np.arange(bunch_pos.shape[1]), bunch_pos[bucket,:])
+        pf.xlabel('Turn')
+        pf.ylabel('Bunch position [s]')
+        pf.set_fontsize(20)
+        pf.gen_plot() 
         
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         for bucket in range(analysis['N_buckets']):
-            plt.plot(bunch_width[bucket,:])
-        plt.xlabel('Turn')
-        plt.ylabel('Bunch width [s]')
-        plt.show()   
+            pf.plot(np.arange(bunch_width.shape[1]), bunch_width[bucket,:])
+        pf.xlabel('Turn')
+        pf.ylabel('Bunch width [s]')
+        pf.set_fontsize(20)
+        pf.gen_plot()   
     
     tomo_params = {'start_frame' :  analysis['mode_window_start'], \
                    'end_frame' : analysis['mode_window_end'], \

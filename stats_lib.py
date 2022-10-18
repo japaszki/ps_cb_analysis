@@ -4,14 +4,26 @@ Created on Tue Aug 16 15:43:16 2022
 
 @author: JohnG
 """
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
+import portable_fig as pfig
+
+colours = ['#1f77b4',
+ '#ff7f0e',
+ '#2ca02c',
+ '#d62728',
+ '#9467bd',
+ '#8c564b',
+ '#e377c2',
+ '#7f7f7f',
+ '#bcbd22',
+ '#17becf']
 
 def scatter_plot_with_linreg(x_datasets, y_datasets, xlabel, ylabel, plot_labels=None, alpha=1.0, title=None, filename=None):
-    plt.figure(figsize=(10,10))
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
     
     regs = []
     for idx, x_data in enumerate(x_datasets):
@@ -26,25 +38,27 @@ def scatter_plot_with_linreg(x_datasets, y_datasets, xlabel, ylabel, plot_labels
         else:
             plot_label = fit_label
             
-        [scatterplt] = plt.plot(x_data, y_data, '.', label=plot_label, alpha=alpha)
+        pf.plot(x_data, y_data, '.', color=colours[idx % len(colours)], label=plot_label, alpha=alpha)
         x_line = np.array([0, max(x_data)])
-        plt.plot(x_line, x_line * reg.slope + reg.intercept, color=scatterplt.get_color())
-        plt.fill_between(x_line, x_line * (reg.slope - reg.stderr) + (reg.intercept - reg.intercept_stderr),\
+        pf.plot(x_line, x_line * reg.slope + reg.intercept, color=colours[idx % len(colours)])
+        pf.fill_between(x_line, x_line * (reg.slope - reg.stderr) + (reg.intercept - reg.intercept_stderr),\
                          x_line * (reg.slope + reg.stderr) + (reg.intercept + reg.intercept_stderr),\
-                         alpha=0.2, color=scatterplt.get_color(), antialiased=True)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
+                         alpha=0.2, color=colours[idx % len(colours)], antialiased=True)
+        pf.xlabel(xlabel)
+        pf.ylabel(ylabel)
+    
+    pf.legend(loc=0, fontsize='medium')
+    pf.set_fontsize(20)
     
     if title != None:
-        plt.title(title)
-        
-    plt.legend(loc=0, fontsize='medium')
-    plt.rc('font', size=16)
+        pf.title(title)
     
     if filename != None:
-        plt.savefig(filename)
-    plt.show()
-    
+        pf.set_filename(filename)
+        pf.save_yaml()
+        
+    pf.gen_plot()
+        
     return regs
     
 
@@ -54,7 +68,8 @@ def gpr_plot(x_datasets, y_datasets, xlabel, ylabel, plot_labels=None, alpha=1.0
     
     N_x_samp = 100
         
-    plt.figure(figsize=(10,10))
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
     
     gprs = []
     slopes = []
@@ -87,14 +102,14 @@ def gpr_plot(x_datasets, y_datasets, xlabel, ylabel, plot_labels=None, alpha=1.0
         else:
             plot_label = None
         
-        [scatterplt] = plt.plot(x_data, y_data, '.', alpha=alpha, label=plot_label)
-        plt.plot(x_samp, mean[:,0] * y_scale, color=scatterplt.get_color())
+        pf.plot(x_data, y_data, '.', alpha=alpha, label=plot_label)
+        pf.plot(x_samp, mean[:,0] * y_scale, color=colours[idx % len(colours)])
         
         std_upper = (mean[:,0]+std) * y_scale
         std_lower = (mean[:,0]-std) * y_scale
         
-        plt.fill_between(x_samp, std_lower, std_upper,\
-                         alpha=0.2, color=scatterplt.get_color(), antialiased=True)
+        pf.fill_between(x_samp, std_lower, std_upper,\
+                         alpha=0.2, color=colours[idx % len(colours)], antialiased=True)
         
         #Find range of slopes allowed by 1-sigma bounds:
         mean_slope = (mean[-1,0] - mean[0,0]) * y_scale / (x_samp[-1] - x_samp[0])
@@ -102,14 +117,17 @@ def gpr_plot(x_datasets, y_datasets, xlabel, ylabel, plot_labels=None, alpha=1.0
         lower_slope = (std_lower[-1] - std_upper[0]) / (x_samp[-1] - x_samp[0])
         slopes.append([mean_slope, lower_slope, upper_slope])
         
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.legend(loc=0, fontsize='medium')
+    pf.xlabel(xlabel)
+    pf.ylabel(ylabel)
+    pf.legend(loc=0, fontsize='medium')
+    
     if title != None:
-        plt.title(title)
+        pf.title(title)
+        
     if filename != None:
-        plt.savefig(filename)
-    plt.rc('font', size=16)
-    plt.show()
+        pf.set_filename(filename)
+        pf.save_yaml()
+        
+    pf.gen_plot()
     
     return [gprs, slopes]

@@ -5,7 +5,7 @@ Created on Mon Aug  8 16:04:52 2022
 @author: JohnG
 """
 import numpy as np
-import pylab as plt
+import portable_fig as pfig
 import pickle
 import yaml
 import os
@@ -66,23 +66,24 @@ for fs_harm_index, fs_harm in enumerate(analysis['fs_harms']):
         stab_osc_filt_percentiles[pc_index][fs_harm_index] = [np.sum(spectrum_filt_percentiles[pc_index][scan_index][stab_harms])\
                                                               for scan_index, scan_param in enumerate(scan_settings)]
     
-    plt.figure('mean_mode_spectrum_phase_space_vs_gain', figsize=(10,10))
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
     modes = np.arange(analysis['N_buckets_fft'])
     for scan_index, scan_param in enumerate(scan_settings):
-        plt.plot(modes, spectrum_filt_percentiles[1][scan_index], '.-',\
+        pf.plot(modes, spectrum_filt_percentiles[1][scan_index], '.-',\
                  label=scan.scan_point_label(scan_param_names, scan_param))
-        plt.fill_between(modes, spectrum_filt_percentiles[0][scan_index], spectrum_filt_percentiles[2][scan_index],
+        pf.fill_between(modes, spectrum_filt_percentiles[0][scan_index], spectrum_filt_percentiles[2][scan_index],
                 alpha=0.2, antialiased=True)
-    plt.xlabel("Mode")
-    plt.ylabel("Amplitude [s]")
-    plt.title('Mode spectrum, phase space method, mode ' + str(fs_harm) +\
+    pf.xlabel("Mode")
+    pf.ylabel("Amplitude [s]")
+    pf.title('Mode spectrum, phase space method, mode ' + str(fs_harm) +\
               ' component, \n averaged over shots')
-    plt.legend(loc=0, fontsize='medium')
-    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig(output_dir + '/mean_mode_spectrum_phase_space_vs_gain_' + str(fs_harm) + 'fs.png')
-    plt.rc('font', size=16)
-    plt.show()
-    plt.close()
+    pf.legend(loc=0, fontsize='medium')
+    # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+    pf.set_filename(output_dir + '/mean_mode_spectrum_phase_space_vs_param_' + str(fs_harm) + 'fs')
+    pf.set_fontsize(20)
+    pf.gen_plot()
+    pf.save_yaml()
 
 
 [x_axes, y_indices, labels] = scan.gen_1d_scans(scan_settings, scan_param_names)
@@ -98,41 +99,45 @@ for x_param_index, x_param_name in enumerate(scan_param_names):
         #list of scan indices to plot:
         y_indices_plot = y_indices[x_param_index][plot_index]
 
-        plt.figure('fs_harm_total_osc_vs_param', figsize=(10,10))
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         for fs_harm_index, fs_harm in enumerate(analysis['fs_harms']):
             
             y_plot = [total_osc_filt_percentiles[1][fs_harm_index][i] for i in y_indices_plot]
             y_fill_l = [total_osc_filt_percentiles[0][fs_harm_index][i] for i in y_indices_plot]
             y_fill_u = [total_osc_filt_percentiles[2][fs_harm_index][i] for i in y_indices_plot]
             
-            plt.plot(x_axis, y_plot, '.-', label='fs * ' + str(fs_harm))
-            plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
-        plt.xlabel(x_param_name)
-        plt.ylabel('Total amplitude across all modes, phase space method')
-        plt.legend(loc=0, fontsize='medium')
-        plt.title(labels[x_param_index][plot_index])
-        plt.rc('font', size=16)
-        plt.savefig(output_dir + '/phase_space_total_osc_vs_gain.png')
-        plt.show()
-        plt.close()
+            pf.plot(x_axis, y_plot, '.-', label='fs * ' + str(fs_harm))
+            pf.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
+        pf.xlabel(x_param_name)
+        pf.ylabel('Total amplitude across all modes, phase space method')
+        pf.legend(loc=0, fontsize='medium')
+        pf.title(labels[x_param_index][plot_index])
+        pf.set_filename(output_dir + '/phase_space_total_osc_vs_param_' + str(x_param_index) +\
+                            '_plot_' + str(plot_index))
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
         
-        plt.figure('fs_harm_stab_harms_osc_vs_param', figsize=(10,10))
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         for fs_harm_index, fs_harm in enumerate(analysis['fs_harms']):
             
             y_plot = [stab_osc_filt_percentiles[1][fs_harm_index][i] for i in y_indices_plot]
             y_fill_l = [stab_osc_filt_percentiles[0][fs_harm_index][i] for i in y_indices_plot]
             y_fill_u = [stab_osc_filt_percentiles[2][fs_harm_index][i] for i in y_indices_plot]
             
-            plt.plot(x_axis, y_plot, '.-', label='fs * ' + str(fs_harm))
-            plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
-        plt.xlabel(x_param_name)
-        plt.ylabel('Total amplitude across modes ' + str(stab_harms) + ', phase space method')
-        plt.title(labels[x_param_index][plot_index])
-        plt.legend(loc=0, fontsize='medium')
-        plt.rc('font', size=16)
-        plt.savefig(output_dir + '/phase_space_stab_osc_vs_gain.png')
-        plt.show()
-        plt.close()
+            pf.plot(x_axis, y_plot, '.-', label='fs * ' + str(fs_harm))
+            pf.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
+        pf.xlabel(x_param_name)
+        pf.ylabel('Total amplitude across modes ' + str(stab_harms) + ', phase space method')
+        pf.title(labels[x_param_index][plot_index])
+        pf.legend(loc=0, fontsize='medium')
+        pf.set_filename(output_dir + '/phase_space_stab_osc_vs_param_' + str(x_param_index) +\
+                            '_plot_' + str(plot_index))
+        pf.set_fontsize(20)
+        pf.gen_plot()
+        pf.save_yaml()
 
 tomo_statistics_data = {'phase_space_method_modes' : modes_runs}
 

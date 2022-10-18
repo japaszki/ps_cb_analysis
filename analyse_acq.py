@@ -5,7 +5,6 @@ Created on Fri Jul  8 11:10:03 2022
 @author: Jan Cheeky Pea
 """
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.signal
 import scipy.optimize
 import os
@@ -13,6 +12,7 @@ import yaml
 import pickle
 import cbfb_analysis_lib as clib
 import stats_lib as slib
+import portable_fig as pfig
 import scan
 
 working_dir = os.getcwd()
@@ -85,9 +85,11 @@ for scan_index, scan_param in enumerate(scan_settings):
             s_quad_runs[scan_index][channel_index][:,:,file_index] = s_quad[channel_index]
 
 #Calculate mean of spectrograms over runs:
-s_dipole_runs_avg = [[np.mean(s_dipole_runs[scan_index][channel], axis=2) for channel in range(len(file['channel_harmonics']))] \
+s_dipole_runs_avg = [[np.mean(s_dipole_runs[scan_index][channel], axis=2)\
+                      for channel in range(len(file['channel_harmonics']))] \
                         for scan_index, scan_param in enumerate(scan_settings)]
-s_quad_runs_avg = [[np.mean(s_quad_runs[scan_index][channel], axis=2) for channel in range(len(file['channel_harmonics']))] \
+s_quad_runs_avg = [[np.mean(s_quad_runs[scan_index][channel], axis=2)\
+                    for channel in range(len(file['channel_harmonics']))] \
                       for scan_index, scan_param in enumerate(scan_settings)]
 
 #Plot averaged spectrograms:
@@ -97,51 +99,57 @@ t_indices = (t > spectrogram_t_lims[0]) & (t <= spectrogram_t_lims[1])
 for channel_index, channel_harmonic in enumerate(file['channel_harmonics']):
     s1 = s_dipole_runs_avg[0][channel_index][f_indices, :]
     s2 = s1[:, t_indices]
-    plt.figure(figsize=(10,10)) 
-    plt.pcolormesh(t[t_indices], f[f_indices], 10*np.log10(s2), cmap='hot', shading='flat')
-    plt.title('Dipole h' + str(channel_harmonic) + ' , averaged over shots')
-    plt.ylabel('Frequency [Hz]')
-    plt.xlabel('Time [ms]')
-    plt.rc('font', size=16)
-    plt.savefig(output_dir + '/dipole_spectrogram_mean_h' + str(channel_harmonic) + '.png')
-    plt.show()
-        
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
+    pf.pcolormesh(t[t_indices], f[f_indices], 10*np.log10(s2), cmap='hot', shading='flat')
+    pf.title('Dipole h' + str(channel_harmonic) + ' , averaged over shots')
+    pf.ylabel('Frequency [Hz]')
+    pf.xlabel('Time [ms]')
+    pf.set_fontsize(20)
+    pf.set_filename(output_dir + '/dipole_spectrogram_mean_h' + str(channel_harmonic))
+    pf.gen_plot()
+    pf.save_yaml()
+
+
     s1 = s_quad_runs_avg[0][channel_index][f_indices, :]
     s2 = s1[:, t_indices]
-    plt.figure(figsize=(10,10)) 
-    plt.pcolormesh(t[t_indices], f[f_indices], 10*np.log10(s2), cmap='hot', shading='flat')
-    plt.title('Quad h' + str(channel_harmonic) + ' , averaged over shots')
-    plt.ylabel('Frequency [Hz]')
-    plt.xlabel('Time [ms]')
-    plt.rc('font', size=16)
-    plt.savefig(output_dir + '/quad_spectrogram_mean_h' + str(channel_harmonic) + '.png')
-    plt.show()
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
+    pf.pcolormesh(t[t_indices], f[f_indices], 10*np.log10(s2), cmap='hot', shading='flat')
+    pf.title('Quad h' + str(channel_harmonic) + ' , averaged over shots')
+    pf.ylabel('Frequency [Hz]')
+    pf.xlabel('Time [ms]')
+    pf.set_fontsize(20)
+    pf.set_filename(output_dir + '/quad_spectrogram_mean_h' + str(channel_harmonic))
+    pf.gen_plot()
+    pf.save_yaml()
     
     #Plot on and off spectra for one time slice:
     #Find t-index closest to specified slice time:
     t_slice_index = np.argmin(abs(t - t_slice))
-    plt.figure(figsize=(10,10))
-        
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
     for scan_index, scan_param in enumerate(scan_settings):
-        plt.plot(f[f_indices], 10*np.log10(s_dipole_runs_avg[scan_index][channel_index][f_indices, t_slice_index]), \
+        pf.plot(f[f_indices], 10*np.log10(s_dipole_runs_avg[scan_index][channel_index][f_indices, t_slice_index]), \
                  label=scan.scan_point_label(scan_param_names, scan_param))
-    plt.xlabel('Baseband frequency [Hz]')
-    plt.ylabel('PSD [dB]')
-    plt.title('Dipole h ' + str(channel_harmonic))
-    plt.legend(loc=0, fontsize='medium')
-    plt.rc('font', size=16)
-    plt.show()
+    pf.xlabel('Baseband frequency [Hz]')
+    pf.ylabel('PSD [dB]')
+    pf.title('Dipole h ' + str(channel_harmonic))
+    pf.legend(loc=0, fontsize='medium')
+    pf.set_fontsize(20)
+    pf.gen_plot()
     
-    plt.figure(figsize=(10,10)) 
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
     for scan_index, scan_param in enumerate(scan_settings):
-        plt.plot(f[f_indices], 10*np.log10(s_quad_runs_avg[scan_index][channel_index][f_indices, t_slice_index]), \
+        pf.plot(f[f_indices], 10*np.log10(s_quad_runs_avg[scan_index][channel_index][f_indices, t_slice_index]), \
                  label=scan.scan_point_label(scan_param_names, scan_param))
-    plt.xlabel('Baseband frequency [Hz]')
-    plt.ylabel('PSD [dB]')
-    plt.title('Quad h ' + str(channel_harmonic))
-    plt.legend(loc=0, fontsize='medium')
-    plt.rc('font', size=16)
-    plt.show()
+    pf.xlabel('Baseband frequency [Hz]')
+    pf.ylabel('PSD [dB]')
+    pf.title('Quad h ' + str(channel_harmonic))
+    pf.legend(loc=0, fontsize='medium')
+    pf.set_fontsize(20)
+    pf.gen_plot()
     
     
 #Generate parameters to pass to fitting function:
@@ -176,17 +184,19 @@ fs_fit_data = np.array(fs_fit_list)
 fs_fit = clib.fs_sidebands(fs_params, fs_init, fs_bounds, file['acq_start_time'], file['f_samp'], fs_fit_data, True)
 
 #Find synchrotron frequency vs time:
-plt.figure(figsize=(10,10)) 
-plt.plot(fs_params['t_centres'], fs_fit)
-plt.plot(fs_params['t_centres'], fs_bounds['fs_max_func'](fs_params['t_centres']), '--')
-plt.plot(fs_params['t_centres'], fs_bounds['fs_min_func'](fs_params['t_centres']), '--')
-plt.xlabel('Time [ms]')
-plt.ylabel('f_s [Hz]')
-plt.title('Estimated synchrotron frequency')
-plt.rc('font', size=16)
-plt.savefig(output_dir + '/fs_vs_time_fit.png')
-plt.show()
-    
+pf = pfig.portable_fig()
+pf.set_figsize((12,9))
+pf.plot(fs_params['t_centres'], fs_fit)
+pf.plot(fs_params['t_centres'], fs_bounds['fs_max_func'](fs_params['t_centres']), '--')
+pf.plot(fs_params['t_centres'], fs_bounds['fs_min_func'](fs_params['t_centres']), '--')
+pf.xlabel('Time [ms]')
+pf.ylabel('f_s [Hz]')
+pf.title('Estimated synchrotron frequency')
+pf.set_fontsize(20)
+pf.set_filename(output_dir + '/fs_vs_time_fit')
+pf.gen_plot()
+pf.save_yaml()
+
 fb_on_h_vs_gain = [{key : np.zeros([len(file['channel_harmonics']),\
                                     len(scan_settings),\
                                     len(analysis['fs_harms'])])\
@@ -232,44 +242,47 @@ for data_type in data_types_plot:
                 amps_samp_runs[scan_index][:,:,run_index] = \
                     clib.sample_fs_harmonics(fs_params, fs_fit, file['acq_start_time'],\
                                              file['f_samp'], run_data[channel_index])
-                
-                plt.figure(figsize=(10,10)) 
+                                
+                pf = pfig.portable_fig()
+                pf.set_figsize((12,9))
                 for h_index, h in enumerate(analysis['fs_harms']):
-                    plt.plot(fs_params['t_centres'], \
+                    pf.plot(fs_params['t_centres'], \
                         amps_samp_runs[scan_index][2*h-1,:,run_index] + amps_samp_runs[scan_index][2*h,:,run_index],\
                         label = str(h) + '*f_s')
-        
-                plt.axvline(file['fb_start_time'], color='b', linestyle='--', label='Feedback On')
-                plt.axvline(file['fb_end_time'], color='k', linestyle='--', label='Feedback Off')
-                plt.legend(loc=0, fontsize='medium')
-                plt.xlabel('Time [ms]')
-                plt.ylabel('Amplitude [counts]')
-                plt.title(data_type + ' h' + str(file['channel_harmonics'][channel_index]) + ', ' +\
+                    
+                pf.axvline(file['fb_start_time'], color='b', linestyle='--', label='Feedback On')
+                pf.axvline(file['fb_end_time'], color='k', linestyle='--', label='Feedback Off')
+                pf.legend(loc=0, fontsize='medium')
+                pf.xlabel('Time [ms]')
+                pf.ylabel('Amplitude [counts]')
+                pf.title(data_type + ' h' + str(file['channel_harmonics'][channel_index]) + ', ' +\
                           scan.scan_point_label(scan_param_names, scan_param) +\
                           ', shot ' + str(run_index))
-                plt.rc('font', size=16)
-                plt.show()
+                pf.set_fontsize(20)
+                pf.gen_plot()
             
         #Plot statistics of fs harmonics vs time:
         for scan_index, scan_param in enumerate(scan_settings):
             
-            plt.figure(figsize=(10,10)) 
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
             for h_index, h in enumerate(analysis['fs_harms']):
                 data_ul = amps_samp_runs[scan_index][2*h-1,:,:] + amps_samp_runs[scan_index][2*h,:,:]
-                plt.plot(fs_params['t_centres'], np.percentile(data_ul, 50, axis=1), label = str(h) + '*f_s')
-                plt.fill_between(fs_params['t_centres'], np.percentile(data_ul, 25, axis=1),\
+                pf.plot(fs_params['t_centres'], np.percentile(data_ul, 50, axis=1), label = str(h) + '*f_s')
+                pf.fill_between(fs_params['t_centres'], np.percentile(data_ul, 25, axis=1),\
                                  np.percentile(data_ul, 75, axis=1), alpha=0.2, antialiased=True)
-            plt.axvline(file['fb_start_time'], color='b', linestyle='--', label='Feedback On')
-            plt.axvline(file['fb_end_time'], color='k', linestyle='--', label='Feedback Off')
-            plt.legend(loc=0, fontsize='medium')
-            plt.xlabel('Time [ms]')
-            plt.ylabel('Amplitude [counts]')
-            plt.title(data_type + ' h' + str(channel_harmonic) + ', ' + \
+            pf.axvline(file['fb_start_time'], color='b', linestyle='--', label='Feedback On')
+            pf.axvline(file['fb_end_time'], color='k', linestyle='--', label='Feedback Off')
+            pf.legend(loc=0, fontsize='medium')
+            pf.xlabel('Time [ms]')
+            pf.ylabel('Amplitude [counts]')
+            pf.title(data_type + ' h' + str(channel_harmonic) + ', ' + \
                       scan.scan_point_label(scan_param_names, scan_param) + ', statistics')
-            plt.rc('font', size=16)
-            plt.savefig(output_dir + '/' + data_type + '_fs_harmonics_stats_scan_index_' + str(scan_index) +\
-                        '_h' + str(channel_harmonic) + '.png')
-            plt.show()
+            pf.set_fontsize(20)
+            pf.set_filename(output_dir + '/' + data_type + '_fs_harmonics_stats_scan_index_' + str(scan_index) +\
+                        '_h' + str(channel_harmonic))
+            pf.gen_plot()
+            pf.save_yaml()
             
         #Take mean of each fs harmonic between fb on and off times:
         fb_on_time_indices = (fs_params['t_centres'] >= file['fb_start_time']) &\
@@ -309,25 +322,27 @@ for data_type in data_types_plot:
             #one plot for each value of remaining parameters:
             for plot_index, x_axis in enumerate(x_axes[x_param_index]):
                 
-                plt.figure(figsize=(10,10)) 
+                pf = pfig.portable_fig()
+                pf.set_figsize((12,9))
                 for h_index, h in enumerate(analysis['fs_harms']):                           
                     y_plot = fb_on_h_vs_gain[1][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
                     y_fill_l = fb_on_h_vs_gain[0][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
                     y_fill_u = fb_on_h_vs_gain[2][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
                         
-                    plt.plot(x_axis, y_plot, '.-', label = str(h) + '*f_s')
-                    plt.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
+                    pf.plot(x_axis, y_plot, '.-', label = str(h) + '*f_s')
+                    pf.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
                     
-                plt.xlabel(x_param_name)
-                plt.ylabel('Mean amplitude between ' + str(file['fb_start_time']) + ' ms and ' +\
+                pf.xlabel(x_param_name)
+                pf.ylabel('Mean amplitude between ' + str(file['fb_start_time']) + ' ms and ' +\
                            str(file['fb_end_time']) + ' ms')
-                plt.legend(loc=0, fontsize='medium')
-                plt.title(data_type + ' h' + str(channel_harmonic) + ' fs harmonics vs ' + x_param_name + ', ' +\
+                pf.legend(loc=0, fontsize='medium')
+                pf.title(data_type + ' h' + str(channel_harmonic) + ' fs harmonics vs ' + x_param_name + ', ' +\
                           labels[x_param_index][plot_index])
-                plt.rc('font', size=16)
-                plt.savefig(output_dir + '/' + data_type + '_fs_harmonics_vs_param_' + str(x_param_index) +\
-                            '_plot_' + str(plot_index) + '_h' + str(channel_harmonic) + '.png')
-                plt.show()
+                pf.set_fontsize(20)
+                pf.set_filename(output_dir + '/' + data_type + '_fs_harmonics_vs_param_' + str(x_param_index) +\
+                            '_plot_' + str(plot_index) + '_h' + str(channel_harmonic))
+                pf.gen_plot()
+                pf.save_yaml()
         
 h_amps_all_1d = {key : [np.concatenate([np.ravel(h_amps_all[key][h_index][index])\
                  for index, data in enumerate(h_amps_all[key][h_index])])
@@ -341,7 +356,7 @@ slib.scatter_plot_with_linreg([h_amps_all_1d['Dipole'][h_index] for h_index, h i
                                plot_labels=[str(h) + '*f_s' for h_index, h in enumerate(analysis['fs_harms'])],\
                                alpha=0.3,\
                                title='Instantaneous amplitudes',\
-                               filename=output_dir + '/fs_harmonics_instantaneous_dipole_vs_quad.png')
+                               filename=output_dir + '/fs_harmonics_instantaneous_dipole_vs_quad.svg')
 
 slib.scatter_plot_with_linreg([h_amps_all_1d['Dipole'][analysis['fs_harms'].index(2)]],\
          [h_amps_all_1d['Dipole'][analysis['fs_harms'].index(4)]],\
@@ -350,7 +365,7 @@ slib.scatter_plot_with_linreg([h_amps_all_1d['Dipole'][analysis['fs_harms'].inde
          plot_labels=None,\
          alpha=0.3,\
          title='Instantaneous dipole acq amplitudes',\
-         filename=output_dir + '/dipole_instantaneous_2fs_vs_4fs.png')
+         filename=output_dir + '/dipole_instantaneous_2fs_vs_4fs.svg')
 
 slib.scatter_plot_with_linreg([h_amps_all_1d['Quad'][analysis['fs_harms'].index(2)]],\
          [h_amps_all_1d['Quad'][analysis['fs_harms'].index(4)]],\
@@ -359,7 +374,7 @@ slib.scatter_plot_with_linreg([h_amps_all_1d['Quad'][analysis['fs_harms'].index(
          plot_labels=None,\
          alpha=0.3,\
          title='Instantaneous quad acq amplitudes',\
-         filename=output_dir + '/quad_instantaneous_2fs_vs_4fs.png')
+         filename=output_dir + '/quad_instantaneous_2fs_vs_4fs.svg')
 
 
 acq_statistics_data = {'data_types' : data_types_plot,

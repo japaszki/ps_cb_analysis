@@ -6,7 +6,7 @@ Created on Wed Jul 20 16:35:49 2022
 """
 import csv
 import numpy as np
-import matplotlib.pyplot as plt
+import portable_fig as pfig
 import scipy.signal
 
 def signed(uint, Nbits):
@@ -40,12 +40,14 @@ def plot_zoom(cmplx_data, t_plot, f_plot, acq_start_time, f_samp, title=''):
     
     #Raw IQ plots:
     t_plot_indices = (ctime > t_plot[0]) & (ctime <= t_plot[1])
-    plt.plot(ctime[t_plot_indices], np.real(cmplx_data[t_plot_indices]))
-    plt.plot(ctime[t_plot_indices], np.imag(cmplx_data[t_plot_indices]))
-    plt.ylabel('Value')
-    plt.xlabel('Time [ms]')
-    plt.title(title)
-    plt.show()
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
+    pf.plot(ctime[t_plot_indices], np.real(cmplx_data[t_plot_indices]))
+    pf.plot(ctime[t_plot_indices], np.imag(cmplx_data[t_plot_indices]))
+    pf.ylabel('Value')
+    pf.xlabel('Time [ms]')
+    pf.title(title)
+    pf.gen_plot()
         
     #Plot frequency-domain data:
     N_window = sum(t_plot_indices)
@@ -57,11 +59,13 @@ def plot_zoom(cmplx_data, t_plot, f_plot, acq_start_time, f_samp, title=''):
     fft_vec = fft_vec_unsort[sort_indices]
     
     f_plot_indices = (freq_vec > f_plot[0]) & (freq_vec <= f_plot[1])
-    plt.plot(freq_vec[f_plot_indices], 20*np.log10(np.abs(fft_vec[f_plot_indices])))
-    plt.ylabel('PSD [dB]')
-    plt.xlabel('Baseband frequency [Hz]')
-    plt.title(title)
-    plt.show()
+    pf = pfig.portable_fig()
+    pf.set_figsize((12,9))
+    pf.plot(freq_vec[f_plot_indices], 20*np.log10(np.abs(fft_vec[f_plot_indices])))
+    pf.ylabel('PSD [dB]')
+    pf.xlabel('Baseband frequency [Hz]')
+    pf.title(title)
+    pf.gen_plot()
     
     return [freq_vec, fft_vec]
 
@@ -83,17 +87,21 @@ def get_spectrogram(dipole_cmplx, quad_cmplx, N_fft, acq_start_time, f_samp, plo
         s_quad[channel] = s_quad_unsort[sort_indices,:]
 
         if plots:
-            plt.pcolormesh(t, f, 10*np.log10(s_dipole[channel]), cmap='hot', shading='flat')
-            plt.title('Dipole channel ' + str(channel))
-            plt.ylabel('Frequency [Hz]')
-            plt.xlabel('Time [ms]')
-            plt.show()
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
+            pf.pcolormesh(t, f, 10*np.log10(s_dipole[channel]), cmap='hot', shading='flat')
+            pf.title('Dipole channel ' + str(channel))
+            pf.ylabel('Frequency [Hz]')
+            pf.xlabel('Time [ms]')
+            pf.gen_plot()
             
-            plt.pcolormesh(t, f, 10*np.log10(s_quad[channel]), cmap='hot', shading='flat')
-            plt.title('Quad channel ' + str(channel))
-            plt.ylabel('Frequency [Hz]')
-            plt.xlabel('Time [ms]')
-            plt.show()   
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
+            pf.pcolormesh(t, f, 10*np.log10(s_quad[channel]), cmap='hot', shading='flat')
+            pf.title('Quad channel ' + str(channel))
+            pf.ylabel('Frequency [Hz]')
+            pf.xlabel('Time [ms]')
+            pf.gen_plot() 
 
     return [f, t, s_dipole, s_quad]
 
@@ -169,13 +177,15 @@ def fs_sidebands(params, init, bounds, acq_start_time, f_samp, cmplx_data, plots
         # amps_fit[:, i] = x_res[2:]
         
         if plots:
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
             for i in range(fft_abs_plot.shape[0]):
-                plt.plot(freq_vec_plot, fft_abs_plot[i,:])
-            plt.plot(freq_vec_plot, fs_peaks(freq_vec_plot, x_res[0], x_res[1], x_res[2:]), 'k:')
-            plt.ylabel('Amplitude [counts]')
-            plt.xlabel('Baseband frequency [Hz]')
-            plt.title('Time = ' + str(t_centre) + ' ms')
-            plt.show()
+                pf.plot(freq_vec_plot, fft_abs_plot[i,:])
+            pf.plot(freq_vec_plot, fs_peaks(freq_vec_plot, x_res[0], x_res[1], x_res[2:]), 'k:')
+            pf.ylabel('Amplitude [counts]')
+            pf.xlabel('Baseband frequency [Hz]')
+            pf.title('Time = ' + str(t_centre) + ' ms')
+            pf.gen_plot() 
 
     return fs_fit
 

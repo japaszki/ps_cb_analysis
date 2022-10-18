@@ -4,7 +4,7 @@ Created on Mon Aug  8 15:17:04 2022
 
 @author: JohnG
 """
-import matplotlib.pyplot as plt
+import portable_fig as pfig
 import numpy as np
 import scipy.interpolate
 
@@ -62,33 +62,33 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
                                   0:((dummy_machine.nbins-0.5)*dummy_machine.dtbin):dummy_machine.dtbin]
 
     if plots:
-        plt.figure(figsize=(10,10))
-        plt.pcolormesh(plot_x, plot_y, measured_waterfall, cmap='hot', shading='flat')
-        plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
-        plt.xlabel('Time [s]')
-        plt.ylabel('Turn')
-        plt.title(display_name + ', full data')
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.show()
-        plt.close()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.pcolormesh(plot_x, plot_y, measured_waterfall, cmap='hot', shading='flat')
+        pf.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
+        pf.xlabel('Time [s]')
+        pf.ylabel('Turn')
+        pf.title(display_name + ', full data')
+        pf.colorbar()
+        pf.set_fontsize(20)
+        pf.gen_plot()
 
     waterfall_window = measured_waterfall[analysis['mode_window_start']:analysis['mode_window_end'],:]
     plot_x_window = plot_x[analysis['mode_window_start']:analysis['mode_window_end'],:]
     plot_y_window = plot_y[analysis['mode_window_start']:analysis['mode_window_end'],:]
 
     if plots:
-        plt.figure(figsize=(10,10))
-        plt.pcolormesh(plot_x_window, plot_y_window, waterfall_window, cmap='hot', shading='flat')
-        plt.axis([plot_x_window.min(), plot_x_window.max(), plot_y_window.min(), plot_y_window.max()])
-        plt.xlabel('Time [s]')
-        plt.ylabel('Turn')
-        plt.title(display_name + ', data in time window : profiles ' +\
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.pcolormesh(plot_x_window, plot_y_window, waterfall_window, cmap='hot', shading='flat')
+        pf.axis([plot_x_window.min(), plot_x_window.max(), plot_y_window.min(), plot_y_window.max()])
+        pf.xlabel('Time [s]')
+        pf.ylabel('Turn')
+        pf.title(display_name + ', data in time window : profiles ' +\
                   str(analysis['mode_window_start']) + ' to ' + str(analysis['mode_window_end']))
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.show()
-        plt.close()
+        pf.colorbar()
+        pf.set_fontsize(20)
+        pf.gen_plot()
 
 
     #Use mean profile to cut waterfall into individual bunches:
@@ -120,18 +120,19 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
     mean_profile_t = dummy_machine.dtbin * np.arange(dummy_machine.nbins)
 
     if plots:
-        plt.figure(figsize=(10,10))   
-        plt.plot(mean_profile_t, mean_profile, label='Profile')
-        plt.plot(mean_profile_t[rising_edges], mean_profile[rising_edges], 'x', label='Rising edges')
-        plt.plot(mean_profile_t[falling_edges], mean_profile[falling_edges], 'x', label='Falling edges')
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.plot(mean_profile_t, mean_profile, label='Profile')
+        pf.plot(mean_profile_t[rising_edges], mean_profile[rising_edges], 'x', label='Rising edges')
+        pf.plot(mean_profile_t[falling_edges], mean_profile[falling_edges], 'x', label='Falling edges')
         for i in cut_indices_edges:
-            plt.axvline(mean_profile_t[int(i)], linestyle='--', color='k', alpha=0.4)
-        plt.xlabel('Time [s]')
-        plt.ylabel('Voltage [V]')
-        plt.title(display_name + ', mean profile in window')
-        plt.legend(loc=1, fontsize='medium')
-        plt.rc('font', size=16)
-        plt.show()
+            pf.axvline(mean_profile_t[int(i)], linestyle='--', color='k', alpha=0.4)
+        pf.xlabel('Time [s]')
+        pf.ylabel('Voltage [V]')
+        pf.title(display_name + ', mean profile in window')
+        pf.legend(loc=1, fontsize='medium')
+        pf.set_fontsize(20)
+        pf.gen_plot()
 
     waterfall_bucket = [None for _ in range(N_buckets)]
     bucket_phase_space = [None for _ in range(N_buckets)]
@@ -141,17 +142,17 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
         plot_x_bucket = plot_x_window[:,int(cut_indices_edges[bucket]):int(cut_indices_edges[bucket+1])]
         plot_y_bucket = plot_y_window[:,int(cut_indices_edges[bucket]):int(cut_indices_edges[bucket+1])]
         
-        plt.figure(figsize=(10,10))
-        plt.pcolormesh(plot_x_bucket, plot_y_bucket, waterfall_bucket[bucket], cmap='hot', shading='flat')
-        plt.axis([plot_x_bucket.min(), plot_x_bucket.max(), plot_y_bucket.min(), plot_y_bucket.max()])
-        plt.xlabel('Time [s]')
-        plt.ylabel('Turn')
-        plt.title(display_name + ', bucket ' + str(bucket) + ' : profiles ' + \
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
+        pf.pcolormesh(plot_x_bucket, plot_y_bucket, waterfall_bucket[bucket], cmap='hot', shading='flat')
+        pf.axis([plot_x_bucket.min(), plot_x_bucket.max(), plot_y_bucket.min(), plot_y_bucket.max()])
+        pf.xlabel('Time [s]')
+        pf.ylabel('Turn')
+        pf.title(display_name + ', bucket ' + str(bucket) + ' : profiles ' + \
                   str(analysis['mode_window_start']) + ' to ' + str(analysis['mode_window_end']))
-        plt.colorbar()
-        plt.rc('font', size=16)
-        plt.show()
-        plt.close()
+        pf.colorbar()
+        pf.set_fontsize(20)
+        pf.gen_plot()
 
     #Maximum radius must be at most half of the width of the narrowest bucket:
     R_max = int(np.floor(np.min([b.shape[1] for b in waterfall_bucket]) / 2))
@@ -165,13 +166,17 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
         machine, frames = tomoin.txt_input_to_machine(input_parameters)
         
         machine.nprofiles = analysis['mode_window_end'] - analysis['mode_window_start']
-        machine._nbins = waterfall_bucket[bucket].shape[1]
-        machine.nbins = waterfall_bucket[bucket].shape[1]
-        machine.full_pp_flag = True
+        
+        bucket_samples = waterfall_bucket[bucket].shape[1]
+        machine._nbins = bucket_samples
+        machine.nbins = bucket_samples
+        machine.min_dt = 0.0
+        machine.max_dt = machine.dtbin * bucket_samples
+        # machine.full_pp_flag = True
         machine.values_at_turns()
     
-        if 'tomogprahy_rebin_override' in analysis.keys():
-            frames.rebin = analysis['tomogprahy_rebin_override']
+        if 'tomography_rebin_override' in analysis.keys():
+            frames.rebin = analysis['tomography_rebin_override']
         frames.nbins_frame = waterfall_bucket[bucket].shape[1]
         frames.skip_bins_start = 0
         frames.skip_bins_end = 0
@@ -284,27 +289,29 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
         if plots:
             r_axis = np.arange(R_max) * machine.dtbin
                 
-            plt.figure()
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
             for r_index in [1, 5, 10, 15, 20]:
                 phi_360 = np.append(phi_samp[r_index], 2*np.pi)
                 data_360 = np.append(data_vs_phi[r_index], data_vs_phi[r_index][0])
                 
-                plt.plot(phi_360, data_360, label='r = ' + str(r_index))    
-            plt.xlabel('Phi [rad]')
-            plt.ylabel('Phase space density')
-            plt.title(display_name + ', bucket ' + str(bucket))
-            plt.legend(loc=0, fontsize='medium')
-            plt.show()
+                pf.plot(phi_360, data_360, label='r = ' + str(r_index))    
+            pf.xlabel('Phi [rad]')
+            pf.ylabel('Phase space density')
+            pf.title(display_name + ', bucket ' + str(bucket))
+            pf.legend(loc=0, fontsize='medium')
+            pf.gen_plot()
                 
             #Mode amplitudes vs. radius:
-            plt.figure()
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
             for mode_index, mode in enumerate(analysis['fs_harms']):
-                plt.plot(r_axis, np.abs(mode_vs_r[bucket,mode_index,:]), label='Mode = ' + str(mode))    
-            plt.xlabel('Radius [s]')
-            plt.ylabel('Phase space density')
-            plt.title(display_name + ', bucket ' + str(bucket))
-            plt.legend(loc=0, fontsize='medium')
-            plt.show()
+                pf.plot(r_axis, np.abs(mode_vs_r[bucket,mode_index,:]), label='Mode = ' + str(mode))    
+            pf.xlabel('Radius [s]')
+            pf.ylabel('Phase space density')
+            pf.title(display_name + ', bucket ' + str(bucket))
+            pf.legend(loc=0, fontsize='medium')
+            pf.gen_plot()
             
         #Fit matched Gaussian bunch to phase space plot:
         p_vs_r = [np.mean(data_vs_phi[r_index]) for r_index in range(R_max)]
@@ -321,25 +328,27 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
     mode_amp_vs_r_percentiles = [np.percentile(np.abs(mode_vs_r), pc, axis=0) for pc in percentiles]
     
     if plots:
-        plt.figure()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         for mode_index, mode in enumerate(analysis['fs_harms']):
-            plt.plot(r_axis, mode_amp_vs_r_percentiles[1][mode_index,:], label='Mode = ' + str(mode)) 
-            plt.fill_between(r_axis, mode_amp_vs_r_percentiles[0][mode_index,:], \
+            pf.plot(r_axis, mode_amp_vs_r_percentiles[1][mode_index,:], label='Mode = ' + str(mode)) 
+            pf.fill_between(r_axis, mode_amp_vs_r_percentiles[0][mode_index,:], \
                              mode_amp_vs_r_percentiles[2][mode_index,:], alpha=0.2, antialiased=True)
-        plt.xlabel('Radius [s]')
-        plt.ylabel('Phase space density')
-        plt.legend(loc=0, fontsize='medium')
-        plt.show()
+        pf.xlabel('Radius [s]')
+        pf.ylabel('Phase space density')
+        pf.legend(loc=0, fontsize='medium')
+        pf.gen_plot()
         
-        plt.figure()
+        pf = pfig.portable_fig()
+        pf.set_figsize((12,9))
         for mode_index, mode in enumerate(analysis['fs_harms']):
-            plt.semilogy(r_axis, mode_amp_vs_r_percentiles[1][mode_index,:], label='Mode = ' + str(mode)) 
-            plt.fill_between(r_axis, mode_amp_vs_r_percentiles[0][mode_index,:], \
+            pf.semilogy(r_axis, mode_amp_vs_r_percentiles[1][mode_index,:], label='Mode = ' + str(mode)) 
+            pf.fill_between(r_axis, mode_amp_vs_r_percentiles[0][mode_index,:], \
                              mode_amp_vs_r_percentiles[2][mode_index,:], alpha=0.2, antialiased=True)
-        plt.xlabel('Radius [s]')
-        plt.ylabel('Phase space density')
-        plt.legend(loc=0, fontsize='medium')
-        plt.show()
+        pf.xlabel('Radius [s]')
+        pf.ylabel('Phase space density')
+        pf.legend(loc=0, fontsize='medium')
+        pf.gen_plot()
     
     #Mode spectra:
     mode_names = ['Monopole', 'Dipole', 'Quadrupole', 'Sextupole', 'Octupole', 'Decapole', '12-pole']
@@ -351,11 +360,12 @@ def read_and_analyse_phase_space(filename, fallback_filename, display_name, anal
         mode_spectrum[:,mode_index] = np.fft.fft(mode_amp_cmplx_padded)/analysis['N_buckets_fft']
         
         if plots:
-            plt.figure()
-            plt.bar(np.arange(analysis['N_buckets_fft']), np.abs(mode_spectrum[:,mode_index]))
-            plt.xlabel('Mode')
-            plt.ylabel('Mode amplitude [s]')
-            plt.title(display_name + ', ' + str(mode_names[mode]) + ' mode spectrum')
-            plt.show()
+            pf = pfig.portable_fig()
+            pf.set_figsize((12,9))
+            pf.bar(np.arange(analysis['N_buckets_fft']), np.abs(mode_spectrum[:,mode_index]))
+            pf.xlabel('Mode')
+            pf.ylabel('Mode amplitude [s]')
+            pf.title(display_name + ', ' + str(mode_names[mode]) + ' mode spectrum')
+            pf.gen_plot()
             
     return mode_spectrum
