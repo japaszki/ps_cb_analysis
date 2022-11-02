@@ -7,7 +7,7 @@ Created on Thu Aug  4 15:55:27 2022
 import os
 import yaml
 import pickle
-import portable_fig as pfig
+from portable_fig import portable_fig as pfig
 import numpy as np
 import stats_lib as slib
 

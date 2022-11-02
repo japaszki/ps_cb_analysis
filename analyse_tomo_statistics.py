@@ -5,7 +5,7 @@ Created on Wed Apr 20 12:28:49 2022
 @author: JohnG
 """
 import numpy as np
-import portable_fig as pfig
+from portable_fig import portable_fig as pfig
 import pickle
 import yaml
 import os

@@ -5,7 +5,7 @@ Created on Thu Jul 21 10:00:26 2022
 @author: JohnG
 """
 import numpy as np
-import portable_fig as pfig
+from portable_fig import portable_fig as pfig
 from scipy.signal import savgol_filter
 
 def tomo_bucket(tomo_data, tomo_params, bucket_params, dipole_freq, fs_harm, plots, plot_name):

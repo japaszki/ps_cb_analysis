@@ -5,7 +5,7 @@ Created on Mon Aug  8 16:04:52 2022
 @author: JohnG
 """
 import numpy as np
-import portable_fig as pfig
+from portable_fig import portable_fig as pfig
 import pickle
 import yaml
 import os
@@ -26,7 +26,7 @@ scan_settings = yaml_params['scan_parameter_settings']
 file_indices = yaml_params['file_indices']
 analysis = yaml_params['analysis']
 file = yaml_params['tomo_file']
-        
+
 #Create directory to store results:
 output_dir = working_dir + '/phase_space_outputs/'
 try:

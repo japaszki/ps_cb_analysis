@@ -8,7 +8,7 @@ import numpy as np
 import scipy.stats
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
-import portable_fig as pfig
+from portable_fig import portable_fig as pfig
 
 colours = ['#1f77b4',
  '#ff7f0e',

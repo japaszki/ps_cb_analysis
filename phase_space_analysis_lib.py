@@ -4,7 +4,7 @@ Created on Mon Aug  8 15:17:04 2022
 
 @author: JohnG
 """
-import portable_fig as pfig
+from portable_fig import portable_fig as pfig
 import numpy as np
 import scipy.interpolate
 

@@ -1,3 +1,6 @@
 [submodule "longitudinal_tomography"]
 	path = longitudinal_tomography
 	url = ssh://git@gitlab.cern.ch:7999/longitudinaltomography/tomographyv3.git
+[submodule "portable_fig"]
+	path = portable_fig
+	url = https://github.com/japaszki/portable_fig.git

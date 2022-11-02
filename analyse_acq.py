@@ -12,7 +12,7 @@ import yaml
 import pickle
 import cbfb_analysis_lib as clib
 import stats_lib as slib
-import portable_fig as pfig
+from portable_fig import portable_fig as pfig
 import scan
 
 working_dir = os.getcwd()

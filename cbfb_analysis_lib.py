@@ -6,7 +6,7 @@ Created on Wed Jul 20 16:35:49 2022
 """
 import csv
 import numpy as np
-import portable_fig as pfig
+from portable_fig import portable_fig as pfig
 import scipy.signal
 
 def signed(uint, Nbits):
