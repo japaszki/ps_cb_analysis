@@ -19,7 +19,7 @@ def import_data(filename_base, num_buffers, num_channels):
         filename = str(filename_base) + "_ch" + str(buffer) + ".txt"
         with open(filename, 'r', newline='') as file:
             reader = csv.reader(file)
-            data[buffer] = list()
+            # data[buffer] = list()
 
             for row in reader:
                 if row: #check if row not empty
@@ -32,6 +32,36 @@ def import_data(filename_base, num_buffers, num_channels):
     for channel in range(num_channels):
         dipole_cmplx[channel] = np.array(data[channel*4]) + 1j * np.array(data[channel*4+1])
         quad_cmplx[channel] = np.array(data[channel*4+2]) + 1j * np.array(data[channel*4+3])
+        
+    return [dipole_cmplx, quad_cmplx]
+
+def import_data_v2(filename_format, shot_name, buffer_names, channel_names):
+    buffer_keys = ('dipoleI', 'dipoleQ', 'quadI', 'quadQ')
+    assert all(key in buffer_names for key in buffer_keys), 'Missing buffer names.'
+    
+    data = {key : [[] for _ in enumerate(channel_names)] for key in buffer_keys}
+
+    for buffer_index, (buffer_key, buffer_name) in enumerate(buffer_names.items()):
+        for chan_index, chan_name in enumerate(channel_names):
+            filename = filename_format.format(shot_name=shot_name, \
+                                              buffer_name=buffer_name, \
+                                                  chan_index=chan_index)
+            with open(filename, 'r', newline='') as file:
+                reader = csv.reader(file)
+
+                for row in reader:
+                    if row: #check if row not empty
+                        data[buffer_key][chan_index].append(signed(int(row[0]), 16))
+            
+    #Combine real and imaginary data into complex arrays:
+    dipole_cmplx = []
+    quad_cmplx = []
+        
+    for chan_index, chan_name in enumerate(channel_names):
+        dipole_cmplx.append(np.array(data['dipoleI'][chan_index]) +\
+            1j * np.array(data['dipoleQ'][chan_index])) 
+        quad_cmplx.append(np.array(data['quadI'][chan_index]) +\
+            1j * np.array(data['quadQ'][chan_index]))
         
     return [dipole_cmplx, quad_cmplx]
 
@@ -141,40 +171,45 @@ def fs_sidebands(params, init, bounds, acq_start_time, f_samp, cmplx_data, plots
         t_centre = params['t_centres'][i]
         t_plot_indices = (ctime > t_centre - params['t_half_span']) & (ctime <= t_centre + params['t_half_span'])
         N_window = sum(t_plot_indices)
-        freq_vec_unsort = np.fft.fftfreq(N_window, 1/params['f_samp'])
-        fft_vec_unsort = np.fft.fft(cmplx_data[:, t_plot_indices] * np.hanning(N_window))
         
-        #Sort result so that points are ascending in frequency:
-        sort_indices = np.argsort(freq_vec_unsort)
-        freq_vec = freq_vec_unsort[sort_indices]
-    
-        fft_vec = fft_vec_unsort[:, sort_indices]
-        fft_abs = np.abs(fft_vec)
+        #Check if any samples exist in the specified time window:
+        if N_window > 0:
+            freq_vec_unsort = np.fft.fftfreq(N_window, 1/params['f_samp'])
+            fft_vec_unsort = np.fft.fft(cmplx_data[:, t_plot_indices] * np.hanning(N_window))
+            
+            #Sort result so that points are ascending in frequency:
+            sort_indices = np.argsort(freq_vec_unsort)
+            freq_vec = freq_vec_unsort[sort_indices]
         
-        f_plot_indices = (freq_vec > -params['fmax']) & (freq_vec <= params['fmax'])
-        freq_vec_plot = freq_vec[f_plot_indices]
-        fft_abs_plot = fft_abs[:, f_plot_indices]
-        
-        #Construct initial vector:
-        init_spacing = (bounds['fs_min_func'](t_centre) + bounds['fs_max_func'](t_centre)) / 2
-        x0 = np.concatenate((np.array([init_spacing, init['width']]), init['amps']))
-        
-        #Set search bounds
-        x_min = np.concatenate((np.array([bounds['fs_min_func'](t_centre), bounds['min_width']]), \
-                                bounds['min_amp'] * np.ones_like(init['amps'])))
-        
-        x_max = np.concatenate((np.array([bounds['fs_max_func'](t_centre), bounds['fs_max_func'](t_centre)/4]), \
-                                bounds['max_amp'] * np.ones_like(init['amps'])))
-        
-        x_bounds = scipy.optimize.Bounds(x_min, x_max)
-        
-        #Perform optimisation:
-        opt_res = scipy.optimize.minimize(mse, x0, args=(freq_vec_plot, fft_abs_plot), bounds=x_bounds, method='trust-constr')
-        x_res = opt_res.x
-        
-        #Save results:
-        fs_fit[i] = x_res[0]
-        # amps_fit[:, i] = x_res[2:]
+            fft_vec = fft_vec_unsort[:, sort_indices]
+            fft_abs = np.abs(fft_vec)
+            
+            f_plot_indices = (freq_vec > -params['fmax']) & (freq_vec <= params['fmax'])
+            freq_vec_plot = freq_vec[f_plot_indices]
+            fft_abs_plot = fft_abs[:, f_plot_indices]
+            
+            #Construct initial vector:
+            init_spacing = (bounds['fs_min_func'](t_centre) + bounds['fs_max_func'](t_centre)) / 2
+            x0 = np.concatenate((np.array([init_spacing, init['width']]), init['amps']))
+            
+            #Set search bounds
+            x_min = np.concatenate((np.array([bounds['fs_min_func'](t_centre), bounds['min_width']]), \
+                                    bounds['min_amp'] * np.ones_like(init['amps'])))
+            
+            x_max = np.concatenate((np.array([bounds['fs_max_func'](t_centre), bounds['fs_max_func'](t_centre)/4]), \
+                                    bounds['max_amp'] * np.ones_like(init['amps'])))
+            
+            x_bounds = scipy.optimize.Bounds(x_min, x_max)
+            
+            #Perform optimisation:
+            opt_res = scipy.optimize.minimize(mse, x0, args=(freq_vec_plot, fft_abs_plot), bounds=x_bounds, method='trust-constr')
+            x_res = opt_res.x
+            
+            #Save results:
+            fs_fit[i] = x_res[0]
+            # amps_fit[:, i] = x_res[2:]
+        else:
+            fs_fit[i] = np.NaN
         
         if plots:
             pf = pfig.portable_fig()
