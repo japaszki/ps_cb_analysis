@@ -477,17 +477,23 @@ def read_and_analyse_tomo(file, analysis, plots, plot_raw_waterfall):
             rising_edge_index = np.min(above_threshold_indices)
             falling_edge_index = np.max(above_threshold_indices)
             
-            rising_edge_frac_index = -profile_minus_threshold[rising_edge_index-1] /\
-                (profile_minus_threshold[rising_edge_index] - profile_minus_threshold[rising_edge_index-1])
+            if falling_edge_index < (bucket_profile.shape[0]-1) and rising_edge_index > 0:
             
-            falling_edge_frac_index = profile_minus_threshold[falling_edge_index] /\
-                (profile_minus_threshold[falling_edge_index+1] - profile_minus_threshold[falling_edge_index])
+                rising_edge_frac_index = -profile_minus_threshold[rising_edge_index-1] /\
+                    (profile_minus_threshold[rising_edge_index] - profile_minus_threshold[rising_edge_index-1])
                 
-            rising_edge_interp_index = rising_edge_index - rising_edge_frac_index
-            falling_edge_interp_index = falling_edge_index + falling_edge_frac_index
-            
-            bunch_pos[bucket, frame] = 0.5*dt_samp*(rising_edge_interp_index + falling_edge_interp_index)
-            bunch_width[bucket, frame] = dt_samp*(falling_edge_interp_index - rising_edge_interp_index)
+                falling_edge_frac_index = profile_minus_threshold[falling_edge_index] /\
+                    (profile_minus_threshold[falling_edge_index+1] - profile_minus_threshold[falling_edge_index])
+                    
+                rising_edge_interp_index = rising_edge_index - rising_edge_frac_index
+                falling_edge_interp_index = falling_edge_index + falling_edge_frac_index
+                
+                bunch_pos[bucket, frame] = 0.5*dt_samp*(rising_edge_interp_index + falling_edge_interp_index)
+                bunch_width[bucket, frame] = dt_samp*(falling_edge_interp_index - rising_edge_interp_index)
+                
+            else:
+                bunch_pos[bucket, frame] = np.nan
+                bunch_width[bucket, frame] = np.nan
     
     if plots:
         pf = pfig.portable_fig()
