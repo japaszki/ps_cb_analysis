@@ -41,6 +41,11 @@ except:
 
 #Specify output dir for plots:
 file['output_dir'] = output_dir
+
+try:
+    new_loader = file['use_new_loader']
+except(KeyError):
+    new_loader = False
     
 spectrogram_f_lims = [-2000, 2000]
 spectrogram_t_lims = [2000, 2810]
@@ -53,8 +58,13 @@ raw_plots = False
 data_types_plot = ['Dipole', 'Quad']
 percentiles = [25, 50, 75]
   
-#Run one spectrogram with plots:
-[dipole_cmplx, quad_cmplx] = clib.import_data(working_dir + '/' + file['file_base']\
+#Run one spectrogram with plots:   
+if new_loader:
+    full_format = working_dir + '/' + file['filename_format']
+    [dipole_cmplx, quad_cmplx] = clib.import_data_v2(working_dir + '/' + file['filename_format'],\
+                   0, file['buffer_names'], file['channel_names'])
+else:
+    [dipole_cmplx, quad_cmplx] = clib.import_data(working_dir + '/' + file['file_base']\
                    + str(file_indices[0][0]), file['num_buffers'], len(file['channel_harmonics']))
 [f, t, s_dipole, s_quad] = clib.get_spectrogram(dipole_cmplx, quad_cmplx, N_fft, file['acq_start_time'], file['f_samp'], True)
 
@@ -71,18 +81,24 @@ s_quad_runs = [[np.zeros([s_dipole[0].shape[0], s_dipole[0].shape[1], len(file_i
                 for channel_index, channel_harmonic in enumerate(file['channel_harmonics'])]\
                 for scan_index, scan_param in enumerate(scan_settings)]
 
+
 for scan_index, scan_param in enumerate(scan_settings):
-    for file_index, file_suffix in enumerate(file_indices[scan_index]):
-        filename = working_dir + '/' + file['file_base'] + str(file_suffix)
-        for channel_index, channel_harmonic in enumerate(file['channel_harmonics']):
-            [cmplx_runs['Dipole'][scan_index][file_index], cmplx_runs['Quad'][scan_index][file_index]] = \
-                clib.import_data(filename, file['num_buffers'], len(file['channel_harmonics']))
-                
-            [_, _, s_dipole, s_quad] = clib.get_spectrogram(cmplx_runs['Dipole'][scan_index][file_index], \
-                cmplx_runs['Quad'][scan_index][file_index], N_fft, file['acq_start_time'], file['f_samp'], False)
+    for shot_index, shot_name in enumerate(file_indices[scan_index]):
+        if new_loader:
+            [cmplx_runs['Dipole'][scan_index][shot_index], cmplx_runs['Quad'][scan_index][shot_index]] = \
+                clib.import_data_v2(full_format, shot_name, file['buffer_names'], file['channel_names'])
+        else:
+            filename = working_dir + '/' + file['file_base'] + str(shot_name)
             
-            s_dipole_runs[scan_index][channel_index][:,:,file_index] = s_dipole[channel_index]
-            s_quad_runs[scan_index][channel_index][:,:,file_index] = s_quad[channel_index]
+            [cmplx_runs['Dipole'][scan_index][shot_index], cmplx_runs['Quad'][scan_index][shot_index]] = \
+                clib.import_data(filename, file['num_buffers'], len(file['channel_harmonics']))
+            
+        [_, _, s_dipole, s_quad] = clib.get_spectrogram(cmplx_runs['Dipole'][scan_index][shot_index], \
+            cmplx_runs['Quad'][scan_index][shot_index], N_fft, file['acq_start_time'], file['f_samp'], False)
+                
+        for channel_index, channel_harmonic in enumerate(file['channel_harmonics']):       
+            s_dipole_runs[scan_index][channel_index][:,:,shot_index] = s_dipole[channel_index]
+            s_quad_runs[scan_index][channel_index][:,:,shot_index] = s_quad[channel_index]
 
 #Calculate mean of spectrograms over runs:
 s_dipole_runs_avg = [[np.mean(s_dipole_runs[scan_index][channel], axis=2)\
@@ -179,8 +195,12 @@ for data_type in fs_fit_params['data_types']:
     for shot_index in fs_fit_params['shot_indices']:
         for channel_index in fs_fit_params['channel_indices']:
             fs_fit_list.append(cmplx_runs[data_type][fs_fit_params['scan_index']][shot_index][channel_index])
+
+#Ensure all of the selected shots have the same length:
+fs_fit_trunc_length = min([fs_fit_element.shape[0] for fs_fit_element in fs_fit_list])
+fs_fit_list_trunc = [fs_fit_element[0:fs_fit_trunc_length] for fs_fit_element in fs_fit_list]
         
-fs_fit_data = np.array(fs_fit_list)
+fs_fit_data = np.array(fs_fit_list_trunc)
 fs_fit = clib.fs_sidebands(fs_params, fs_init, fs_bounds, file['acq_start_time'], file['f_samp'], fs_fit_data, True)
 
 #Find synchrotron frequency vs time:
@@ -197,7 +217,7 @@ pf.set_filename(output_dir + '/fs_vs_time_fit')
 pf.gen_plot()
 pf.save_yaml()
 
-fb_on_h_vs_gain = [{key : np.zeros([len(file['channel_harmonics']),\
+h_vs_param = [{key : np.zeros([len(file['channel_harmonics']),\
                                     len(scan_settings),\
                                     len(analysis['fs_harms'])])\
                     for key in data_types_plot}\
@@ -308,7 +328,7 @@ for data_type in data_types_plot:
                         
                 #Take quartiles of window mean over runs:
                 for pc_index, pc in enumerate(percentiles):
-                    fb_on_h_vs_gain[pc_index][data_type][channel_index,scan_index,h_index] =\
+                    h_vs_param[pc_index][data_type][channel_index,scan_index,h_index] =\
                         np.percentile(fb_on_mean, pc)
             
         [x_axes, y_indices, labels] = scan.gen_1d_scans(scan_settings, scan_param_names)
@@ -325,9 +345,9 @@ for data_type in data_types_plot:
                 pf = pfig.portable_fig()
                 pf.set_figsize((12,9))
                 for h_index, h in enumerate(analysis['fs_harms']):                           
-                    y_plot = fb_on_h_vs_gain[1][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
-                    y_fill_l = fb_on_h_vs_gain[0][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
-                    y_fill_u = fb_on_h_vs_gain[2][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
+                    y_plot = h_vs_param[1][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
+                    y_fill_l = h_vs_param[0][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
+                    y_fill_u = h_vs_param[2][data_type][channel_index, y_indices[x_param_index][plot_index], h_index]
                         
                     pf.plot(x_axis, y_plot, '.-', label = str(h) + '*f_s')
                     pf.fill_between(x_axis, y_fill_l, y_fill_u, alpha=0.2, antialiased=True)
@@ -343,6 +363,46 @@ for data_type in data_types_plot:
                             '_plot_' + str(plot_index) + '_h' + str(channel_harmonic))
                 pf.gen_plot()
                 pf.save_yaml()
+            
+#Plots of all harmonics on same plot, individual shots:
+data_types_spectrogram = 'Dipole'
+
+scan_index = 1
+scan_param = scan_settings[scan_index]
+
+run_index = 0
+run_data = cmplx_runs[data_types_spectrogram][scan_index][run_index]
+
+for h_index, h in enumerate(analysis['fs_harms']):
+    pf = pfig.portable_fig()
+    pf.set_figsize((10,10))
+    
+    #Assemble mode spectrogram from channel data:
+    N_modes = analysis['N_buckets_fft']
+    mode_spectrogram = np.zeros([len(fs_params['t_centres']), N_modes])
+    
+    for channel_index, channel_harmonic in enumerate(file['channel_harmonics']):               
+        shot_data = clib.sample_fs_harmonics(fs_params, fs_fit, file['acq_start_time'],\
+                                 file['f_samp'], run_data[channel_index])
+            
+        #Rearrange upper and lower sidebands of harmonics into modes
+        mode_spectrogram[:, channel_harmonic] = shot_data[2*h,:]
+        mode_spectrogram[:, N_modes-channel_harmonic] = shot_data[2*h-1,:]                
+        
+    pf.pcolormesh(np.arange(N_modes), fs_params['t_centres'], mode_spectrogram, cmap='hot', shading='flat')
+    pf.xlim([1, N_modes-1])
+    pf.xlabel('Mode')
+    pf.ylabel('Time [ms]')
+    pf.title(str(h) + '*fs, ' +\
+              scan.scan_point_label(scan_param_names, scan_param) +\
+              ', shot ' + str(run_index))
+    pf.set_fontsize(20)
+    pf.set_filename(output_dir + '/' + data_type + '_spectrogram_scan_index_' + str(scan_index) +\
+                       '_shot_' + str(run_index) + '_fs_h_' + str(h))
+    pf.gen_plot()
+    pf.save_yaml()
+                
+                
         
 h_amps_all_1d = {key : [np.concatenate([np.ravel(h_amps_all[key][h_index][index])\
                  for index, data in enumerate(h_amps_all[key][h_index])])
